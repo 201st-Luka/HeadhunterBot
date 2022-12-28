@@ -1,4 +1,4 @@
-[![Discord][discord_shield]][discord_url]
+[![Discord][discord_shield]][discord_url] ![Last commit][last_commit_shield]
 
 # HeadhunterBot
 
@@ -59,3 +59,4 @@ I don't want that anyone steals my project and makes money with it trough ads, .
 [clashOfClans_site]: https://developer.clashofclans.com/#/
 [discord_shield]: https://img.shields.io/badge/Discord-blue?logo=discord&logoColor=white
 [discord_url]: https://discord.gg/j2PAF9Wru8
+[last_commit_shield]: https://img.shields.io/github/last-commit/201st-Luka/HeadhunterBot
