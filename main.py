@@ -8,8 +8,7 @@ import coloredlogs
 # scripts -----------------------------------------------------------------------------------------
 from Bot.Variables import log, discordApiToken
 from Bot.Extensions.Extensionssetup import setup
-from Database.Data_base import DataBase
-from Database.User import User
+from Bot.Databaseinstance import DbInstance
 
 
 # LOGGING -----------------------------------------------------------------------------------------
@@ -30,8 +29,8 @@ coloredlogs.install(level=logging.INFO, logger=Log)
 
 
 # DATABASE ----------------------------------------------------------------------------------------
-db = DataBase()
-user = User(db)
+db_instance = DbInstance()
+user = db_instance.user
 
 # GUILD MANAGEMENT --------------------------------------------------------------------------------
 guildIdList = user.guilds.fetch_guild_ids()
@@ -57,7 +56,7 @@ setup(headhunterBot)
 headhunterBot.start()
 
 # BOT STOP ----------------------------------------------------------------------------------------
-db.close()
+db_instance.close_db()
 
 
 # weitliegende statistiken (detailliert) -> evt visualisierung mit math plot lib

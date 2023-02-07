@@ -100,6 +100,6 @@ def get_achievement_completion_info(json, index: int):
 
 
 def kwargs2clan_and_tag(kwargs_):
-    return (kwargs_['clans'][:len(kwargs_['clans']) - len(kwargs_['clans'].split(" ")[-1]) - 1],
-            kwargs_['clans'][len(kwargs_['clans']) - len(kwargs_['clans'].split(" ")[-1]):])
+    return [kwargs_['clans'][:len(kwargs_['clans']) - len(kwargs_['clans'].split(" ")[-1]) - 1],
+            kwargs_['clans'][len(kwargs_['clans']) - len(kwargs_['clans'].split(" ")[-1]):]]
 
