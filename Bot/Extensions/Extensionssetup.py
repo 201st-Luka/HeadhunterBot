@@ -24,7 +24,7 @@ def extension_command_wrapper(command):
             return
         # exceptions -------------
         except NoClanTagLinked:
-            await ctx.send("This guild doesn't have a linked clan tag. Do `/linkclan <clan tag>` first!")
+            await ctx.send("This guild doesn't have a linked clan tag. Do `/clan link set <clan tag>` first!")
             return
         except InvalidClanTag:
             await ctx.send("Your entered clan tag is not valid!")

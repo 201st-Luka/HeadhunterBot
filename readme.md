@@ -46,7 +46,7 @@ You're done. Happy coding.
 
 # What I DISALLOW to do
 
-I don't want that my bot gets copied and hosted on a server. I am going to set up a server soon to host the bot. So If you want any custom features, please contact me via Discord or create a pull request with your implementation of the feature.
+I don't want that my bot gets copied and hosted on a server. I am going to set up a server to host the bot soon. So If you want any custom features, please contact me via Discord or create a pull request with your implementation of the feature.
 
 I don't want that anyone steals my project and makes money with it trough ads, ... .
 

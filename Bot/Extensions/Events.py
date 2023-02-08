@@ -30,12 +30,13 @@ class Events(Extension):
 
     @extension_listener(name="on_ready")
     async def on_ready(self):
-        logging.info(f"Successfully logged in as {self.client.me.name} ({self.client.me.id})")
+        logging.info(f"Logging in as {self.client.me.name} ({self.client.me.id})")
         guilds_bot_is_on = self.client.guilds
         guild_ids = self.user.guilds.fetch_guild_ids()
         for guild in guilds_bot_is_on:
             if guild.id not in guild_ids:
                 self.user.guilds.insert_guild(guild.id, guild_name=str(guild.name))
+        logging.info(f"Successfully logged in")
         return
 
 
