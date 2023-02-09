@@ -10,7 +10,7 @@ from Bot.Variables import embed_color
 from Bot.Variables import wars_per_page as wars_p_page
 from CocApi.Clans.Clan import clan
 from CocApi.Clans.Clanwar import current_war, war_log
-from CocApi.Players.PLayer import player_bulk
+from CocApi.Players.Player import player_bulk
 from Database.Data_base import DataBase
 from Database.User import User
 
@@ -279,9 +279,9 @@ class ClanCommand(Extension):
                                 )
                                 message = await ctx.channel.send("This may take a moment.\nContent is loading...")
                                 await ctx.channel.typing
-                                clan_member_list = player_bulk(clan_member_tag_list)
+                                clan_member_list = await player_bulk(clan_member_tag_list)
                                 clan_max_name_len = len(max([member['name'] for member in clan_member_list], key=len))
-                                opponent_member_list = player_bulk(opponent_member_tag_list)
+                                opponent_member_list = await player_bulk(opponent_member_tag_list)
                                 opponent_max_name_len = len(max([member['name'] for member in opponent_member_list], key=len))
                                 print(clan_member_list)
                                 await embed_message.edit(embeds=clans_embed)
@@ -311,7 +311,7 @@ class ClanCommand(Extension):
                         case 'set':  # -------- set subcommand-------------------------
                             if kwargs['tag'].startswith("#"):
                                 kwargs['tag'] = kwargs['tag'].strip("#")
-                            clan_response = clan(kwargs['tag'])
+                            clan_response = await clan(kwargs['tag'])
                             if clan_response == {"reason": "notFound"}:
                                 await ctx.send(f"#{kwargs['tag']} is not a valid clantag!")
                                 return
@@ -358,7 +358,7 @@ class ClanCommand(Extension):
                     if ' ' in kwargs['clans']:
                         clan_and_tag = kwargs2clan_and_tag(kwargs)
                         clan_and_tag[1] = kwargs['clans'].split(' ')[-1]
-                        clan_response = clan(clan_and_tag[1])
+                        clan_response = await clan(clan_and_tag[1])
                         warlog_response = [war_clan for war_clan in war_log(clan_and_tag[1])['items'] if war_clan['attacksPerMember'] == 2]
                         warlog_len = len(warlog_response)
                         if len(warlog_response) >= 20:
@@ -442,7 +442,7 @@ class ClanCommand(Extension):
                         size = kwargs['size']
                     else:
                         size = "medium"
-                    clan_response = clan(clan_and_tag[1])
+                    clan_response = await clan(clan_and_tag[1])
                     badge_embed = Embed(title=f"Badge of **{clan_response['name']}** #{clan_and_tag[1]}")
                     badge_embed.set_image(url=clan_response['badgeUrls'][size])
                     await ctx.send(
@@ -456,7 +456,7 @@ class ClanCommand(Extension):
                 case "table":  # ======== TABLE command ===================================
                     clan_and_tag = kwargs2clan_and_tag(kwargs)
                     clan_and_tag[1] = kwargs['clans'].split(' ')[-1]
-                    response_clan = clan(clan_and_tag[1])
+                    response_clan = await clan(clan_and_tag[1])
                     war_info = [str(response_clan['warWins']) if "warWins" in response_clan else "N/A",
                                 str(response_clan['warTies']) if "warTies" in response_clan else "N/A",
                                 str(response_clan['warLosses']) if "warLosses" in response_clan else "N/A"]
@@ -506,7 +506,7 @@ class ClanCommand(Extension):
                             member['role'],
                             member['expLevel'],
                             member['tag']
-                        ] for member in player_bulk([member["tag"][1:] for member in response_clan["memberList"]])
+                        ] for member in await player_bulk([member["tag"][1:] for member in response_clan["memberList"]])
                     ]
                     sort = "0" if 'sort' not in kwargs else kwargs['sort']
                     order = "" if 'order' not in kwargs else kwargs['order']
@@ -556,7 +556,7 @@ class ClanCommand(Extension):
                 case "warlog":  # ======== WARLOG command ==================================
                     clan_and_tag = kwargs2clan_and_tag(kwargs)
                     page = kwargs['page'] if 'page' in kwargs else 1
-                    clan_response = clan(clan_and_tag[1])
+                    clan_response = await clan(clan_and_tag[1])
                     warlog_response = [war_clan for war_clan in war_log(clan_and_tag[1])['items'] if war_clan['attacksPerMember'] == 2]
                     max_pages = [(len(warlog_response) // wars_p_page) + 1 if len(warlog_response) % wars_p_page else len(warlog_response) // wars_p_page][0]
                     page = [1 if page <= 0 else max_pages if page > max_pages else page][0]
@@ -609,7 +609,7 @@ class ClanCommand(Extension):
         if current_war_response['state'] != 'notInWar':
             clans.append((current_war_response['opponent']['name'], current_war_response['opponent']['tag'].strip("#")))
         if args != ():
-            clan_response = clan(args[0])
+            clan_response = await clan(args[0])
             if clan_response != {"reason": "notFound"}:
                 clans.append((clan_response['name'], clan_response['tag'].strip("#")))
         choices = [Choice(name=f"{c[0]} (#{c[1]})", value=" ".join(c)) for c in clans]
@@ -621,7 +621,7 @@ class ClanCommand(Extension):
     async def button_warlog_command_next_page(self, ctx: ComponentContext):
         clan_tag = ctx.message.embeds[0].title.split(' ')[-1].strip('#')
         page = int(ctx.message.embeds[0].footer.text.split(" ")[1]) + 1
-        clan_response = clan(clan_tag)
+        clan_response = await clan(clan_tag)
         warlog_response = [war_clan for war_clan in war_log(clan_tag)['items'] if war_clan['attacksPerMember'] == 2]
         max_pages = [(len(warlog_response) // wars_p_page) + 1 if len(warlog_response) % wars_p_page else len(warlog_response) // wars_p_page][0]
         page = [1 if page <= 0 else max_pages if page > max_pages else page][0]
@@ -670,7 +670,7 @@ class ClanCommand(Extension):
     async def button_warlog_command_previous_page(self, ctx: ComponentContext):
         clan_tag = ctx.message.embeds[0].title.split(' ')[-1].strip('#')
         page = int(ctx.message.embeds[0].footer.text.split(" ")[1]) - 1
-        clan_response = clan(clan_tag)
+        clan_response = await clan(clan_tag)
         warlog_response = [clan_war for clan_war in war_log(clan_tag)['items'] if clan_war['attacksPerMember'] == 2]
         max_pages = [(len(warlog_response) // wars_p_page) + 1 if len(warlog_response) % wars_p_page else len(warlog_response) // wars_p_page][0]
         page = [1 if page <= 0 else max_pages if page > max_pages else page][0]
