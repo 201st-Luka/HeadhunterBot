@@ -206,15 +206,17 @@ class ClanCommand(Extension):
                     match kwargs['sub_command']:
                         case 'war_stats':  # -------- war_stats subcommand ------------------
                             clan_and_tag = kwargs2clan_and_tag(kwargs)
-                            current_war_response = current_war(clan_and_tag[1])
+                            current_war_response = await current_war(clan_and_tag[1])
                             if current_war_response == {"reason": "notFound"}:
                                 raise InvalidClanTag
                             if current_war_response['state'] != 'notInWar':
+                                warlog_json = await war_log(clan_and_tag[1])
+                                warlog_json_opponent = await war_log(current_war_response['opponent']['tag'].strip('#'))
                                 clans_list = (
-                                    (clan(clan_and_tag[1]),
-                                     [war_clan for war_clan in war_log(clan_and_tag[1])['items'] if war_clan['attacksPerMember'] == 2][:20]),
-                                    (clan(current_war_response['opponent']['tag'].strip('#')),
-                                     [war_clan for war_clan in war_log(current_war_response['opponent']['tag'].strip('#'))['items'] if
+                                    (await clan(clan_and_tag[1]),
+                                     [war_clan for war_clan in warlog_json['items'] if war_clan['attacksPerMember'] == 2][:20]),
+                                    (await clan(current_war_response['opponent']['tag'].strip('#')),
+                                     [war_clan for war_clan in warlog_json_opponent['items'] if
                                       war_clan['attacksPerMember'] == 2][:20])
                                 )
                                 clans_embed = Embed(
@@ -251,7 +253,7 @@ class ClanCommand(Extension):
                             return
                         case 'lineup':  # -------- lineup subcommand ---------------------
                             clan_and_tag = kwargs2clan_and_tag(kwargs)
-                            current_war_response = current_war(clan_and_tag[1])
+                            current_war_response = await current_war(clan_and_tag[1])
                             if current_war_response == {"reason": "notFound"}:
                                 raise InvalidClanTag
                             if current_war_response['state'] != 'notInWar':
@@ -265,10 +267,10 @@ class ClanCommand(Extension):
                                           "Average war stars per member:\n",
                                     inline=True
                                 )
-                                clan_member_list = [member for member in current_war(clan_and_tag[1])['clan']['members']]
+                                clan_member_list = [member for member in current_war_response['clan']['members']]
                                 clan_member_list.sort(key=lambda member: member['mapPosition'])
                                 clan_member_tag_list = [member['tag'].strip('#') for member in clan_member_list]
-                                opponent_member_list = [member for member in current_war(clan_and_tag[1])['opponent']['members']]
+                                opponent_member_list = [member for member in current_war_response['opponent']['members']]
                                 opponent_member_list.sort(key=lambda member: member['mapPosition'])
                                 opponent_member_tag_list = [member['tag'].strip('#') for member in opponent_member_list]
                                 embed_message = await ctx.send(embeds=clans_embed)
@@ -359,7 +361,8 @@ class ClanCommand(Extension):
                         clan_and_tag = kwargs2clan_and_tag(kwargs)
                         clan_and_tag[1] = kwargs['clans'].split(' ')[-1]
                         clan_response = await clan(clan_and_tag[1])
-                        warlog_response = [war_clan for war_clan in war_log(clan_and_tag[1])['items'] if war_clan['attacksPerMember'] == 2]
+                        warlog_json = await war_log(clan_and_tag[1])
+                        warlog_response = [war_clan for war_clan in warlog_json['items'] if war_clan['attacksPerMember'] == 2]
                         warlog_len = len(warlog_response)
                         if len(warlog_response) >= 20:
                             warlog_len_20 = 20
@@ -557,7 +560,8 @@ class ClanCommand(Extension):
                     clan_and_tag = kwargs2clan_and_tag(kwargs)
                     page = kwargs['page'] if 'page' in kwargs else 1
                     clan_response = await clan(clan_and_tag[1])
-                    warlog_response = [war_clan for war_clan in war_log(clan_and_tag[1])['items'] if war_clan['attacksPerMember'] == 2]
+                    warlog_json = await war_log(clan_and_tag[1])
+                    warlog_response = [war_clan for war_clan in warlog_json['items'] if war_clan['attacksPerMember'] == 2]
                     max_pages = [(len(warlog_response) // wars_p_page) + 1 if len(warlog_response) % wars_p_page else len(warlog_response) // wars_p_page][0]
                     page = [1 if page <= 0 else max_pages if page > max_pages else page][0]
                     start, end = (page - 1) * wars_p_page, page * wars_p_page
@@ -572,7 +576,7 @@ class ClanCommand(Extension):
                     clan_embed.set_footer(f"Page {page} of {max_pages}")
                     page_wars = warlog_response[start:end]
                     [clan_embed.add_field(
-                        name=f"__{clan_war['clan']['name']} {clan_war['clan']['clanLevel']} vs {clan_war['opponent']['name']} {clan_war['opponent']['clanLevel']}__",
+                        name=f"__{clan_war['clan']['name']} ({clan_war['clan']['clanLevel']}) vs {clan_war['opponent']['name']} ({clan_war['opponent']['clanLevel']})__",
                         value=f"Result: **{clan_war['result']}**\n"
                               f"End date and time: **{clan_war['endTime'][6:8]}"
                               f"{['st' if clan_war['endTime'][7] == '1' else 'nd' if clan_war['endTime'][7] == '2' else 'rd' if clan_war['endTime'][7] == '3' else 'th'][0]} "
@@ -605,7 +609,7 @@ class ClanCommand(Extension):
     @extension_autocomplete("clan", "clans")
     async def stats_clans_autocomplete(self, ctx: CommandContext, *args):
         clans = [self.user.guilds.fetch_clanname_and_tag(ctx.guild_id)]
-        current_war_response = current_war(clans[0][1])
+        current_war_response = await current_war(clans[0][1])
         if current_war_response['state'] != 'notInWar':
             clans.append((current_war_response['opponent']['name'], current_war_response['opponent']['tag'].strip("#")))
         if args != ():
@@ -622,7 +626,8 @@ class ClanCommand(Extension):
         clan_tag = ctx.message.embeds[0].title.split(' ')[-1].strip('#')
         page = int(ctx.message.embeds[0].footer.text.split(" ")[1]) + 1
         clan_response = await clan(clan_tag)
-        warlog_response = [war_clan for war_clan in war_log(clan_tag)['items'] if war_clan['attacksPerMember'] == 2]
+        warlog_json = await war_log(clan_tag)
+        warlog_response = [war_clan for war_clan in warlog_json['items'] if war_clan['attacksPerMember'] == 2]
         max_pages = [(len(warlog_response) // wars_p_page) + 1 if len(warlog_response) % wars_p_page else len(warlog_response) // wars_p_page][0]
         page = [1 if page <= 0 else max_pages if page > max_pages else page][0]
         start, end = (page - 1) * wars_p_page, page * wars_p_page
@@ -637,7 +642,7 @@ class ClanCommand(Extension):
         clan_embed.set_footer(f"Page {page} of {max_pages}")
         page_wars = warlog_response[start:end]
         [clan_embed.add_field(
-            name=f"__{clan_war['clan']['name']} {clan_war['clan']['clanLevel']} vs {clan_war['opponent']['name']} {clan_war['opponent']['clanLevel']}__",
+            name=f"__{clan_war['clan']['name']} ({clan_war['clan']['clanLevel']}) vs {clan_war['opponent']['name']} ({clan_war['opponent']['clanLevel']})__",
             value=f"Result: **{clan_war['result']}**\n"
                   f"End date and time: **{clan_war['endTime'][6:8]}"
                   f"{['st' if clan_war['endTime'][7] == '1' else 'nd' if clan_war['endTime'][7] == '2' else 'rd' if clan_war['endTime'][7] == '3' else 'th'][0]} "
@@ -671,7 +676,8 @@ class ClanCommand(Extension):
         clan_tag = ctx.message.embeds[0].title.split(' ')[-1].strip('#')
         page = int(ctx.message.embeds[0].footer.text.split(" ")[1]) - 1
         clan_response = await clan(clan_tag)
-        warlog_response = [clan_war for clan_war in war_log(clan_tag)['items'] if clan_war['attacksPerMember'] == 2]
+        warlog_json = await war_log(clan_tag)
+        warlog_response = [war_clan for war_clan in warlog_json['items'] if war_clan['attacksPerMember'] == 2]
         max_pages = [(len(warlog_response) // wars_p_page) + 1 if len(warlog_response) % wars_p_page else len(warlog_response) // wars_p_page][0]
         page = [1 if page <= 0 else max_pages if page > max_pages else page][0]
         start, end = (page - 1) * wars_p_page, page * wars_p_page
@@ -686,7 +692,7 @@ class ClanCommand(Extension):
         clan_embed.set_footer(f"Page {page} of {max_pages}")
         page_wars = warlog_response[start:end]
         [clan_embed.add_field(
-            name=f"__{clan_war['clan']['name']} {clan_war['clan']['clanLevel']} vs {clan_war['opponent']['name']} {clan_war['opponent']['clanLevel']}__",
+            name=f"__{clan_war['clan']['name']} ({clan_war['clan']['clanLevel']}) vs {clan_war['opponent']['name']} ({clan_war['opponent']['clanLevel']})__",
             value=f"Result: **{clan_war['result']}**\n"
                   f"End date and time: **{clan_war['endTime'][6:8]}"
                   f"{['st' if clan_war['endTime'][7] == '1' else 'nd' if clan_war['endTime'][7] == '2' else 'rd' if clan_war['endTime'][7] == '3' else 'th'][0]} "

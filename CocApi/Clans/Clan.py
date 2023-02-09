@@ -26,14 +26,3 @@ async def members(clan_tag: str):
     )
     await session.close()
     return await response.json()
-
-
-async def get_url_image(image_url: str):
-    session = aiohttp.ClientSession()
-
-    response = await session.get(
-        image_url,
-        headers=clashOfClansHeaders
-    )
-    await session.close()
-    return response
