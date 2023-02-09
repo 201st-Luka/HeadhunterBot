@@ -3,7 +3,7 @@ from interactions import CommandContext, ComponentContext
 
 from Bot.Exeptions import NoClanTagLinked, InvalidClanTag, InvalidPlayerTag, NoPlayerTagLinked, InvalidCommandSyntax
 from CocApi.Clans.Clan import clan
-from CocApi.Players.PLayer import player
+from CocApi.Players.Player import player
 from Database.User import User
 
 
@@ -22,7 +22,7 @@ def check_clan_tag(clan_tag: str, ctx: CommandContext, user: User) -> str:
     return clan_tag
 
 
-def check_player_tag(player_tag: str, ctx: CommandContext, user: User) -> str:
+async def check_player_tag(player_tag: str, ctx: CommandContext, user: User) -> str:
     if player_tag is None:
         player_tag = user.users.fetch_player_tags(ctx.author.id)
         if player_tag is None:
@@ -30,7 +30,7 @@ def check_player_tag(player_tag: str, ctx: CommandContext, user: User) -> str:
         return player_tag
     if player_tag.startswith("#"):
         player_tag = player_tag.strip("#")
-    response_player = player(player_tag)
+    response_player = await player(player_tag)
     if response_player == {"reason": "notFound"}:
         raise InvalidPlayerTag
     del response_player

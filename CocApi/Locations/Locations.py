@@ -2,20 +2,19 @@ import aiohttp
 from Bot.Variables import clashOfClansHeaders
 
 
-async def current_war(clan_tag: str):
+async def locations():
     session = aiohttp.ClientSession()
     response = await session.get(
-        f"https://api.clashofclans.com/v1/clans/%23{clan_tag}/currentwar",
+        url="https://api.clashofclans.com/v1/locations",
         headers=clashOfClansHeaders
     )
     await session.close()
     return await response.json()
 
-
-async def war_log(clan_tag: str):
+async def location(location_id: int):
     session = aiohttp.ClientSession()
     response = await session.get(
-        f"https://api.clashofclans.com/v1/clans/%23{clan_tag}/warlog",
+        url=f"https://api.clashofclans.com/v1/locations/{str(location_id)}",
         headers=clashOfClansHeaders
     )
     await session.close()

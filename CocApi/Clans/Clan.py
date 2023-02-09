@@ -1,4 +1,4 @@
-import requests
+import aiohttp
 from Bot.Variables import clashOfClansHeaders
 
 
@@ -8,22 +8,21 @@ def clan_search(name: str, warFrequency: str = None, locationId: int = None, min
     return
 
 
-def clan(clan_tag: str):
-    return requests.get(
+async def clan(clan_tag: str):
+    session = aiohttp.ClientSession()
+    response = await session.get(
         f"https://api.clashofclans.com/v1/clans/%23{clan_tag}",
         headers=clashOfClansHeaders
-    ).json()
+    )
+    await session.close()
+    return await response.json()
 
 
-def members(clan_tag: str):
-    return requests.get(
+async def members(clan_tag: str):
+    session = aiohttp.ClientSession()
+    response = await session.get(
         f"https://api.clashofclans.com/v1/clans/%23{clan_tag}/members",
         headers=clashOfClansHeaders
-    ).json()
-
-
-def get_url_image(image_url: str):
-    return requests.get(
-        image_url,
-        headers=clashOfClansHeaders
     )
+    await session.close()
+    return await response.json()
