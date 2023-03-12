@@ -2,7 +2,7 @@ import logging
 import os
 from interactions import CommandContext, Extension, Client, ComponentContext
 
-from Bot.Exeptions import NoClanTagLinked, InvalidClanTag, NoPlayerTagLinked, InvalidPlayerTag
+from Bot.Exeptions import NoClanTagLinked, InvalidClanTag, NoPlayerTagLinked, InvalidPlayerTag, AlreadyLinkedClanTag
 from Bot.Variables import path
 
 
@@ -34,6 +34,9 @@ def extension_command_wrapper(command):
             return
         except InvalidPlayerTag:
             await ctx.send("Your entered player tag is not valid!")
+            return
+        except AlreadyLinkedClanTag:
+            await ctx.send("This clan has already been linked to this server")
             return
         except Exception as exception:
             await ctx.send(

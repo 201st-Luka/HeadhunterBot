@@ -16,3 +16,7 @@ class InvalidPlayerTag(Exception):
 
 class InvalidCommandSyntax(Exception):
     pass
+
+
+class AlreadyLinkedClanTag(Exception):
+    pass
