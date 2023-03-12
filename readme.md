@@ -38,7 +38,8 @@ I am open for new suggestions and ideas for features (or write them by yourself 
    - [coloredlogs](coloredLogs_docs) (`pip install coloredlogs`)
 
 3. Then, you have to register a Discord bot on the official Discord site. You can do this [here](discord_developers). You have to manually copy the token in the `Bot/Variables.py` file to the `discordApiToken` variable.
-4. Lastly, you have to create a ClashOfClans api key. You have to go to the [official ClashOfClans site](clashOfClans_site). Copy the token and paste it in the `Bot/Variables.py` file and replace in the `clashOfClansHeaders` dict the authorisation bearer.
+4. You have to create a ClashOfClans api key. You have to go to the [official ClashOfClans site](clashOfClans_site). Copy the token and paste it in the `Bot/Variables.py` file and replace in the `clashOfClansHeaders` dict the authorisation bearer.
+5. Lastly you have to run the Admin.py script once to create the database with all needed tables.
 
 You're done. Happy coding.
 
