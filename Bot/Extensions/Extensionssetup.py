@@ -16,8 +16,8 @@ def setup(client: Client):
 def extension_command_wrapper(command):
     async def extension_wrapper(extension: Extension, ctx: CommandContext, *args, **kwargs):
         # logging ----------------
-        logging.info(f"The user {ctx.user.username}#{ctx.user.discriminator} ({ctx.user.id}) used /{command.__name__} on guild '{ctx.guild}' "
-                     f"({ctx.guild_id}) in channel '{ctx.channel}' ({ctx.channel_id}).")
+        logging.info(f"The user {ctx.user.username}#{ctx.user.discriminator} ({ctx.user.id}) used /{command.__name__} on guild '{ctx.guild.name}' "
+                     f"({ctx.guild.id}) in channel '{ctx.channel.name}' ({ctx.channel.id}).")
         try:
             # extension command --
             await command(extension, ctx, *args, **kwargs)

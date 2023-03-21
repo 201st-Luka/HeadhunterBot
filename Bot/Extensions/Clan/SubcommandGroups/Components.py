@@ -1,11 +1,11 @@
-from interactions import ComponentContext, Embed, ActionRow, Button, ButtonStyle
+from interactions import ComponentContext, Embed, ActionRow, Button, ButtonStyle, CommandContext
 
 from CocApi.Clans.Clan import clan
 from CocApi.Clans.Clanwar import war_log
 from Bot.Variables import wars_per_page as wars_p_page
 
 
-async def publish_warlog_embed(ctx: ComponentContext, clan_tag: str, page: int, edit: bool):
+async def publish_warlog_embed(ctx: CommandContext | ComponentContext, clan_tag: str, page: int, edit: bool):
     clan_response = await clan(clan_tag)
     warlog_json = await war_log(clan_tag)
     warlog_response = [war_clan for war_clan in warlog_json['items'] if war_clan['attacksPerMember'] == 2]

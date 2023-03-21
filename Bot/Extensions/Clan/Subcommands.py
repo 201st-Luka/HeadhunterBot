@@ -155,7 +155,7 @@ async def table(ctx: CommandContext, kwargs):
     await ctx.channel.typing
     members_table_list = [
         [
-            [position for position in response_clan['memberList'] if position['tag'] == member['tag']][0]['clanRank'],
+            [position['clanRank'] for position in response_clan['memberList'] if position['tag'] == member['tag']][0],
             member['name'],
             member['trophies'],
             member['warPreference'],

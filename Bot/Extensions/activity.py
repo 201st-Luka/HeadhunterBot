@@ -35,6 +35,7 @@ class ActivityCommand(Extension):
         ]
 
     )
+    @extension_command_wrapper
     async def members(self, ctx: CommandContext, **kwargs):
         await ctx.send(str(kwargs))
         return
