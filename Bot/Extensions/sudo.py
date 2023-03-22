@@ -1,27 +1,24 @@
 from interactions import extension_command, Option, OptionType, Extension, Client, CommandContext, Permissions, Choice, extension_autocomplete
 
-from Bot.Extensions.Extensionssetup import extension_command_wrapper
 from CocApi.Clans.Clan import members
 from CocApi.Players.Player import player
-from Database.Data_base import DataBase
 from Database.User import User
 
 
 class SudoCommand(Extension):
     client: Client
-    user: User = User(DataBase())
+    user: User
 
-    def __init__(self, client: Client):
+    def __init__(self, client: Client, user: User):
         self.client = client
+        self.user = user
         return
 
     @extension_command(
         name="sudo",
-        description="server admin command",
         default_scope=True,
         default_member_permissoins=Permissions.ADMINISTRATOR
     )
-    @extension_command_wrapper
     async def sudo(self, ctx: CommandContext, **kwargs):
         pass
 
@@ -45,7 +42,6 @@ class SudoCommand(Extension):
             )
         ]
     )
-    @extension_command_wrapper
     async def force_link_player(self, ctx: CommandContext, **kwargs):
         await ctx.send(str(kwargs))
         return
@@ -70,7 +66,6 @@ class SudoCommand(Extension):
             )
         ]
     )
-    @extension_command_wrapper
     async def force_unlink_player(self, ctx: CommandContext, **kwargs):
         await ctx.send(str(kwargs))
         return
@@ -88,7 +83,6 @@ class SudoCommand(Extension):
             )
         ]
     )
-    @extension_command_wrapper
     async def show_players_accounts(self, ctx: CommandContext, **kwargs):
         await ctx.send(str(kwargs))
         return
@@ -98,28 +92,25 @@ class SudoCommand(Extension):
         name="link_clan",
         description="sets the clan tag for your guild"
     )
-    @extension_command_wrapper
     async def link_clan(self, ctx: CommandContext, **kwargs):
         await ctx.send(str(kwargs))
         return
 
     @sudo.subcommand(
         group="guild",
-        name="unset",
+        name="unset_clan",
         description="unsets the clan tag from your guild"
     )
-    @extension_command_wrapper
-    async def unset(self, ctx: CommandContext, **kwargs):
+    async def unset_clan(self, ctx: CommandContext, **kwargs):
         await ctx.send(str(kwargs))
         return
 
     @sudo.subcommand(
         group="guild",
-        name="info",
+        name="info_clan",
         description="shows the linked clan tag of your guild"
     )
-    @extension_command_wrapper
-    async def info(self, ctx: CommandContext, **kwargs):
+    async def info_clan(self, ctx: CommandContext, **kwargs):
         await ctx.send(str(kwargs))
         return
 
@@ -142,7 +133,6 @@ class SudoCommand(Extension):
             )
         ]
     )
-    @extension_command_wrapper
     async def feed(self, ctx: CommandContext, **kwargs):
         await ctx.send(str(kwargs))
         return
@@ -167,7 +157,6 @@ class SudoCommand(Extension):
             )
         ]
     )
-    @extension_command_wrapper
     async def blacklist(self, ctx: CommandContext, **kwargs):
         await ctx.send(str(kwargs))
         return
@@ -176,20 +165,20 @@ class SudoCommand(Extension):
         name="clear",
         description="clears the chat",
         default_scope=True,
+        default_member_permissoins=Permissions.ADMINISTRATOR,
         options=[Option(name="message_amount",
                         description="the amount of messages to delete",
                         type=OptionType.INTEGER,
                         required=True)
                  ]
     )
-    @extension_command_wrapper
     async def clear(self, ctx: CommandContext, message_amount: int):
         await ctx.channel.typing
         await ctx.channel.purge(message_amount)
         await ctx.send(f"Deleted {message_amount} messages.", ephemeral=True)
         return
 
-    @extension_autocomplete("sudo", "player_tag")
+    @sudo.autocomplete("player_tag")
     async def player_tag_autocomplete(self, ctx: CommandContext, *args):
         choices = []
         if args != ():
@@ -212,8 +201,8 @@ class SudoCommand(Extension):
         await ctx.populate(choices)
         return
 
-def setup(client: Client):
-    SudoCommand(client)
+def setup(client: Client, user: User):
+    SudoCommand(client, user)
     return
 
 

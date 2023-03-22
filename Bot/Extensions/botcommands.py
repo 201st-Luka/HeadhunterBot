@@ -1,6 +1,5 @@
 from interactions import Extension, Client, extension_command, CommandContext, Embed
 
-from Bot.Extensions.Extensionssetup import extension_command_wrapper
 from Bot.Variables import discordServer
 
 
@@ -16,7 +15,6 @@ class ClearCommand(Extension):
         default_scope=True,
         description="This command opens the configuration guide."
     )
-    @extension_command_wrapper
     async def config(self, ctx: CommandContext):
         config_embed = Embed()
         config_embed.title = "**__Configuration:__**"
@@ -47,7 +45,6 @@ class ClearCommand(Extension):
         default_scope=True,
         description="sends a link to the *201st Community* Discord server"
     )
-    @extension_command_wrapper
     async def dc(self, ctx: CommandContext):
         await ctx.send(f"The official Discord server for the {self.client.me.name} is the [201st Community]({discordServer}) server.\n"
                        f"You can leave feedback, ask for features or get help setting up the Bot.\n"

@@ -6,19 +6,19 @@ from Database.Data_base import DataBase
 
 class Users:
     table = "users"
-    db = None
+    __db = None
     cursor = None
     connection = None
 
     def __init__(self, database: DataBase):
         self.cursor = database.get_cursor()
         self.connection = database.get_connection()
-        self.db = database
+        self.__db = database
 
     @database_logger
     def insert_user(self, user_id: Snowflake, player_tag: str, player_name: str):
         self.cursor.execute("INSERT INTO users(user_id, player_tag, player_name) VALUES (?, ?, ?)", (str(user_id), player_tag, player_name))
-        self.db.save_changes()
+        self.__db.save_changes()
         return
 
     @database_logger
@@ -49,7 +49,7 @@ class Users:
     @database_logger
     def update_player_tag(self, user_id: Snowflake, player_tag: str):
         self.cursor.execute("UPDATE users SET player_tag=? WHERE user_id=?", (player_tag, str(user_id)))
-        self.db.save_changes()
+        self.__db.save_changes()
         return
 
     @database_logger

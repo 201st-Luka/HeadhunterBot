@@ -4,7 +4,7 @@ from interactions import CommandContext, Embed, ActionRow, Button, ButtonStyle
 
 from Bot.Exeptions import InvalidClanTag
 from Bot.Extensions.Clan.SubcommandGroups.Components import publish_warlog_embed
-from Bot.Methods import kwargs2clan_and_tag
+from Bot.Methods import clans2clan_and_tag
 from Bot.Variables import embed_color
 from CocApi.Clans.Clan import clan
 from CocApi.Clans.Clanwar import war_log
@@ -13,7 +13,7 @@ from CocApi.Players.Player import player_bulk
 
 async def stats(ctx: CommandContext, kwargs):
     if ' ' in kwargs['clans']:
-        clan_and_tag = kwargs2clan_and_tag(kwargs)
+        clan_and_tag = clans2clan_and_tag(kwargs)
         clan_and_tag[1] = kwargs['clans'].split(' ')[-1]
         clan_response = await clan(clan_and_tag[1])
         warlog_json = await war_log(clan_and_tag[1])
@@ -96,7 +96,7 @@ async def stats(ctx: CommandContext, kwargs):
     raise InvalidClanTag
 
 async def clan_badge(ctx: CommandContext, kwargs):
-    clan_and_tag = kwargs2clan_and_tag(kwargs)
+    clan_and_tag = clans2clan_and_tag(kwargs)
     if 'size' in kwargs:
         size = kwargs['size']
     else:
@@ -113,9 +113,11 @@ async def clan_badge(ctx: CommandContext, kwargs):
         )])
     return
 
-async def table(ctx: CommandContext, kwargs):
-    clan_and_tag = kwargs2clan_and_tag(kwargs)
-    clan_and_tag[1] = kwargs['clans'].split(' ')[-1]
+async def table(ctx: CommandContext, clans: str, sort: int = 0, order: bool = False):
+    print(clans, sort, order)
+    clan_and_tag = clans2clan_and_tag(clans)
+    # clan_and_tag[1] = kwargs['clans'].split(' ')[-1]
+    clan_and_tag[1] = clans.split(' ')[-1]
     response_clan = await clan(clan_and_tag[1])
     war_info = [str(response_clan['warWins']) if "warWins" in response_clan else "N/A",
                 str(response_clan['warTies']) if "warTies" in response_clan else "N/A",
@@ -168,9 +170,9 @@ async def table(ctx: CommandContext, kwargs):
             member['tag']
         ] for member in await player_bulk([member["tag"][1:] for member in response_clan["memberList"]])
     ]
-    sort = "0" if 'sort' not in kwargs else kwargs['sort']
-    order = "" if 'order' not in kwargs else kwargs['order']
-    members_table_list.sort(key=lambda m: m[int(sort)], reverse=bool(order))
+    # sort = 0 if 'sort' not in kwargs else kwargs['sort']
+    # order = False if 'order' not in kwargs else kwargs['order']
+    members_table_list.sort(key=lambda m: m[sort], reverse=order)
     max_name_len, max_tag_len = len(max([name[1] for name in members_table_list], key=len)), \
         len(max([tag[10] for tag in members_table_list], key=len))
     members_table_list = [
@@ -215,7 +217,7 @@ async def table(ctx: CommandContext, kwargs):
     return
 
 async def warlog(ctx: CommandContext, kwargs):
-    clan_and_tag = kwargs2clan_and_tag(kwargs)
+    clan_and_tag = clans2clan_and_tag(kwargs)
     page = kwargs['page'] if 'page' in kwargs else 1
     await publish_warlog_embed(ctx, clan_and_tag[1], page, False)
     return

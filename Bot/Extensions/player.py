@@ -1,19 +1,18 @@
 from interactions import Client, extension_command, Option, OptionType, CommandContext, Extension, Choice
 
-from Bot.Extensions.Extensionssetup import extension_command_wrapper
 from Bot.Methods import check_player_tag
 from CocApi.Clans.Clan import members
 from CocApi.Players.Player import player
 from Database.User import User
-from Database.Data_base import DataBase
 
 
 class Player(Extension):
     client: Client
-    user: User = User(DataBase())
+    user: User
 
-    def __init__(self, client: Client):
+    def __init__(self, client: Client, user: User):
         self.client = client
+        self.user = user
         return
 
     @extension_command(
@@ -30,7 +29,6 @@ class Player(Extension):
             )
         ]
     )
-    @extension_command_wrapper
     async def player(self, ctx: CommandContext, player_tag=None):
         player_tag = await check_player_tag(player_tag, ctx, self.user)
         response_player = await player(player_tag)
@@ -51,6 +49,6 @@ class Player(Extension):
         await ctx.populate(choices)
 
 
-def setup(client: Client):
-    Player(client)
+def setup(client: Client, user: User):
+    Player(client, user)
     return
