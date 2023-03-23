@@ -99,12 +99,15 @@ def get_achievement_completion_info(json, index: int):
     return json['achievements'][index]['completionInfo'].split(" ")[-1]
 
 
-def kwargs2clan_and_tag(kwargs_):
+def clans2clan_and_tag(kwargs_):
     if 'clans' in kwargs_:
         return [kwargs_['clans'][:len(kwargs_['clans']) - len(kwargs_['clans'].split(" ")[-1]) - 1],
                 kwargs_['clans'][len(kwargs_['clans']) - len(kwargs_['clans'].split(" ")[-1]):]]
     elif 'clan' in kwargs_:
         return [kwargs_['clan'][:len(kwargs_['clan']) - len(kwargs_['clan'].split(" ")[-1]) - 1],
                 kwargs_['clan'][len(kwargs_['clan']) - len(kwargs_['clan'].split(" ")[-1]):]]
+    else:
+        return [kwargs_[:len(kwargs_) - len(kwargs_.split(" ")[-1]) - 1],
+                kwargs_[len(kwargs_) - len(kwargs_.split(" ")[-1]):]]
 
 

@@ -1,17 +1,15 @@
 from interactions import Extension, Client, extension_command, CommandContext, Option, OptionType, extension_autocomplete, Choice
 
-from Bot.Extensions.Extensionssetup import extension_command_wrapper
-from CocApi.Clans.Clan import members, clan
+from CocApi.Clans.Clan import clan
 from CocApi.Clans.Clanwar import current_war
-from Database.Data_base import DataBase
 from Database.User import User
 
 
 class ActivityCommand(Extension):
     client: Client
-    user: User = User(DataBase())
+    user: User
 
-    def __init__(self, client: Client):
+    def __init__(self, client: Client, user: User):
         self.client = client
         return
 
@@ -54,6 +52,6 @@ class ActivityCommand(Extension):
         return
 
 
-def setup(client: Client):
-    ActivityCommand(client)
+def setup(client: Client, user: User):
+    ActivityCommand(client, user)
     return

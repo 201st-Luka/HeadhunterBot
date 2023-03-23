@@ -7,20 +7,20 @@ from Database.Data_base import DataBase
 
 class Messages:
     table = "messages"
-    db = None
+    __db = None
     cursor = None
     connection = None
 
     def __init__(self, database: DataBase):
         self.cursor = database.get_cursor()
         self.connection = database.get_connection()
-        self.db = database
+        self.__db = database
 
     @database_logger
     def insert_message(self, message_id: interactions.Snowflake, message_type=None, type_value=None, message_time_stamp=None, tag=None):
         self.cursor.execute("INSERT INTO messages VALUES (?, ?, ?, ?, ?)",
                             (str(message_id), message_type, str(type_value), message_time_stamp, tag))
-        self.db.save_changes()
+        self.__db.save_changes()
         logging.info(f"Inserted entry '{message_id}' in the database.")
         return
 
@@ -36,7 +36,7 @@ class Messages:
             message_time_stamp = old_message[3]
         self.cursor.execute("UPDATE messages SET message_type=?, type_value=?, message_time_stamp=? WHERE message_id=?",
                             (message_type, str(type_value), message_time_stamp, str(message_id)))
-        self.db.save_changes()
+        self.__db.save_changes()
         return
 
     @database_logger

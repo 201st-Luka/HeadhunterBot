@@ -1,14 +1,14 @@
 from interactions import Embed, CommandContext
 
 from Bot.Exeptions import InvalidClanTag
-from Bot.Methods import kwargs2clan_and_tag
+from Bot.Methods import clans2clan_and_tag
 from CocApi.Clans.Clan import clan
 from CocApi.Clans.Clanwar import current_war, war_log
 from CocApi.Players.Player import player_bulk
 
 
 async def war_stats(ctx: CommandContext, kwargs):
-    clan_and_tag = kwargs2clan_and_tag(kwargs)
+    clan_and_tag = clans2clan_and_tag(kwargs)
     current_war_response = await current_war(clan_and_tag[1])
     if current_war_response == {"reason": "notFound"}:
         raise InvalidClanTag
@@ -56,7 +56,7 @@ async def war_stats(ctx: CommandContext, kwargs):
     return
 
 async def lineup(ctx: CommandContext, kwargs):
-    clan_and_tag = kwargs2clan_and_tag(kwargs)
+    clan_and_tag = clans2clan_and_tag(kwargs)
     current_war_response = await current_war(clan_and_tag[1])
     if current_war_response == {"reason": "notFound"}:
         raise InvalidClanTag

@@ -1,23 +1,14 @@
-import logging
-import os
 from interactions import CommandContext, Extension, Client, ComponentContext
 
 from Bot.Exeptions import NoClanTagLinked, InvalidClanTag, NoPlayerTagLinked, InvalidPlayerTag, AlreadyLinkedClanTag
-from Bot.Variables import path
-
-
-def setup(client: Client):
-    extensions = [extension.path[len(path) + 1:-3] for extension in os.scandir(f"{path}/Bot/Extensions") if extension.is_file()]
-    extensions.remove("Bot/Extensions/Extensionssetup")
-    [client.load(extension) for extension in [extension.replace("/", ".") for extension in extensions]]
-    return
 
 
 def extension_command_wrapper(command):
     async def extension_wrapper(extension: Extension, ctx: CommandContext, *args, **kwargs):
         # logging ----------------
-        logging.info(f"The user {ctx.user.username}#{ctx.user.discriminator} ({ctx.user.id}) used /{command.__name__} on guild '{ctx.guild}' "
-                     f"({ctx.guild_id}) in channel '{ctx.channel}' ({ctx.channel_id}).")
+
+        # logging.info(f"The user {ctx.user.username}#{ctx.user.discriminator} ({ctx.user.id}) used /{command.__name__} on guild '{ctx.guild.name}' "
+        #              f"({ctx.guild.id}) in channel '{ctx.channel.name}' ({ctx.channel.id}).")
         try:
             # extension command --
             await command(extension, ctx, *args, **kwargs)
@@ -50,8 +41,9 @@ def extension_command_wrapper(command):
 def extension_component_wrapper(component_callback):
     async def extension_wrapper(extension: Extension, ctx: ComponentContext, *args, **kwargs):
         # logging ----------------
-        logging.info(f"The user {ctx.user.username}#{ctx.user.discriminator} ({ctx.user.id}) used the component {component_callback.__name__} on"
-                     f" guild '{ctx.guild}' ({ctx.guild_id}) in channel '{ctx.channel}' ({ctx.channel_id}).")
+
+        # logging.info(f"The user {ctx.user.username}#{ctx.user.discriminator} ({ctx.user.id}) used the component {component_callback.__name__} on"
+        #              f" guild '{ctx.guild}' ({ctx.guild_id}) in channel '{ctx.channel}' ({ctx.channel_id}).")
         try:
             # mother component callback
             await component_callback(extension, ctx, *args, **kwargs)

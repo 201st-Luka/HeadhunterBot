@@ -1,6 +1,6 @@
-from interactions import Extension, Client, extension_command, Option, OptionType, CommandContext, Embed
+from interactions import Extension, Client, extension_command, CommandContext, Embed
 
-from Bot.Extensions.Extensionssetup import extension_command_wrapper
+from Bot.Variables import discordServer
 
 
 class ClearCommand(Extension):
@@ -11,28 +11,10 @@ class ClearCommand(Extension):
         return
 
     @extension_command(
-        name="clear",
-        description="clears the chat",
-        default_scope=True,
-        options=[Option(name="message_amount",
-                        description="the amount of messages to delete",
-                        type=OptionType.INTEGER,
-                        required=True)
-                 ]
-    )
-    @extension_command_wrapper
-    async def clear(self, ctx: CommandContext, message_amount: int):
-        await ctx.channel.typing
-        await ctx.channel.purge(message_amount)
-        await ctx.send(f"Deleted {message_amount} messages.")
-        return
-
-    @extension_command(
         name="config",
         default_scope=True,
         description="This command opens the configuration guide."
     )
-    @extension_command_wrapper
     async def config(self, ctx: CommandContext):
         config_embed = Embed()
         config_embed.title = "**__Configuration:__**"
@@ -56,6 +38,17 @@ class ClearCommand(Extension):
                                      "enable all members having the 'BotAdmin' role to change the settings for the Bot "
                                      "on this guild.")
         await ctx.send(embeds=config_embed)
+        return
+
+    @extension_command(
+        name="dc",
+        default_scope=True,
+        description="sends a link to the *201st Community* Discord server"
+    )
+    async def dc(self, ctx: CommandContext):
+        await ctx.send(f"The official Discord server for the {self.client.me.name} is the [201st Community]({discordServer}) server.\n"
+                       f"You can leave feedback, ask for features or get help setting up the Bot.\n"
+                       f"{discordServer}")
         return
 
 
