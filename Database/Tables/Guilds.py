@@ -81,3 +81,9 @@ class Guilds:
                             (clan_tag, clan_name, str(guild_id)))
         self.__db.save_changes()
         return
+
+    def update_clan_tag(self, guild_id: Snowflake, clan_tag: str | None):
+        self.cursor.execute("UPDATE guilds SET clan_tag=? WHERE guild_id=?;",
+                            (clan_tag, str(guild_id)))
+        self.__db.save_changes()
+        return

@@ -52,13 +52,13 @@ class Events(Extension):
     async def on_command_error(self, ctx: CommandContext, exception: Exception):
         match exception:
             case NoClanTagLinked():
-                await ctx.send("This guild doesn't have a linked clan tag. Do `/clan link set <clan tag>` first!")
+                await ctx.send("This guild does not have a linked clan tag. Do `/sudo guild link_clan <clan tag>` first!")
                 return
             case InvalidClanTag():
                 await ctx.send("Your entered clan tag is not valid!")
                 return
             case NoPlayerTagLinked():
-                await ctx.send("You don't have a linked player tag. Do `/linkplayer <player tag>` first!")
+                await ctx.send("You don't have a linked player tag. Do `/player link add <player tag>` first!")
                 return
             case InvalidPlayerTag():
                 await ctx.send("Your entered player tag is not valid!")

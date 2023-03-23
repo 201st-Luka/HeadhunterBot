@@ -138,8 +138,13 @@ class ClanCommand(Extension):
         await warlog(ctx, kwargs)
         return
 
-    @clan.subcommand(
-        group="currentwar",
+    @clan.group(
+        name="currentwar"
+    )
+    async def currentwar(self, ctx: CommandContext):
+        pass
+
+    @currentwar.subcommand(
         name="war_stats",
         description="returns statistics of clans and opponent if in war",
         options=[
@@ -156,8 +161,7 @@ class ClanCommand(Extension):
         await war_stats(ctx, kwargs)
         return
 
-    @clan.subcommand(
-        group="currentwar",
+    @currentwar.subcommand(
         name="lineup",
         description="returns statistics of clans and opponent if in war",
         options=[
