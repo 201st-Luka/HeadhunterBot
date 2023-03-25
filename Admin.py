@@ -1,5 +1,3 @@
-import time
-
 from Database.Data_base import DataBase
 
 
@@ -13,8 +11,7 @@ class Admin:
         self.connection = database.get_connection()
         self.db = database
 
-    def drop_table(self, table_name: str):
-        self.cursor.execute("".join(("DROP TABLE ", table_name, ";")))
+    def drop_table(self):
         self.db.save_changes()
 
     def create_table_guilds(self):
