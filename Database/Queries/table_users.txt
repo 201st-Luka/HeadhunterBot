@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, user_id INTEGER, player_tag TEXT,player_name TEXT);

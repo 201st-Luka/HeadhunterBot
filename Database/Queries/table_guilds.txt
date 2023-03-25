@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS guilds (guild_id INTEGER PRIMARY KEY, guild_name TEXT NOT NULL, guild_owner INTEGER, clan_tag, clan_name,feed_channel, warlog_channel, clantable_channel, time_zone);
