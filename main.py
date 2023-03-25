@@ -6,9 +6,10 @@ import coloredlogs
 
 
 # scripts -----------------------------------------------------------------------------------------
-from Bot.Variables import log, discordApiToken
+from Bot.Variables import log, discordApiToken  #, clashOfClansHeaders
 from Database.Data_base import DataBase
 from Database.User import User
+#from CocApi.Api import ApiInterface
 
 
 # LOGGING -----------------------------------------------------------------------------------------
@@ -33,9 +34,13 @@ db = DataBase()
 user = User(db)
 
 
-# GUILD MANAGEMENT --------------------------------------------------------------------------------
+# guild management
 guildIdList = user.guilds.fetch_guild_ids()
 # guildIdList = (893218147740565524)
+
+
+# COC API -----------------------------------------------------------------------------------------
+#apiInterface = ApiInterface(clashOfClansHeaders)
 
 
 # BOT ---------------------------------------------------------------------------------------------
@@ -59,6 +64,7 @@ headhunterBot.start()
 
 # BOT STOP ----------------------------------------------------------------------------------------
 db.close()
+#apiInterface.close()
 
 
 # weitliegende statistiken (detailliert) -> evt visualisierung mit math plot lib

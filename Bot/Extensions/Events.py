@@ -2,7 +2,7 @@ from logging import Logger
 
 from interactions import Extension, Client, extension_listener, ClientPresence, StatusType, PresenceActivity, PresenceActivityType, CommandContext
 
-from Bot.Exeptions import NoClanTagLinked, NoPlayerTagLinked, InvalidPlayerTag, AlreadyLinkedClanTag, InvalidClanTag
+from Bot.Exeptions import NoClanTagLinked, NoPlayerTagLinked, InvalidPlayerTag, AlreadyLinkedClanTag, InvalidClanTag, AlreadyLinkedPlayerTag
 from Database.User import User
 
 
@@ -64,15 +64,19 @@ class Events(Extension):
                 await ctx.send("Your entered player tag is not valid!")
                 return
             case AlreadyLinkedClanTag():
-                await ctx.send("This clan has already been linked to this server")
+                await ctx.send("This clan has already been linked to this server.")
+                return
+            case AlreadyLinkedPlayerTag():
+                await ctx.send("This player has already been linked.")
                 return
             case _:
                 await ctx.send(
                     f"Something went wrong. Please report this error on my Discord server (`/dc`). Exception:\n```diff\n- "
                     f"{str(exception)}```")
                 self.logger.error(f"An error occurred.\n{ctx.user.username}#{ctx.user.discriminator} ({ctx.user.id}) used {ctx.command.name} "
-                                  f"in the channel {ctx.channel.name} ({ctx.channel.id}) on guild {ctx.guild.name} ({ctx.guild.id}). "
-                                  f"Error: {ctx.command.error_callback}\nException: {exception}")
+                                  f"in the channel {ctx.channel.name} ({ctx.channel.id}) on guild {ctx.guild.name} ({ctx.guild.id}).\n"
+                                  f"Error: {ctx.command.error_callback}\n"
+                                  f"Exception: {exception}")
                 raise exception
 
 

@@ -1,7 +1,7 @@
 import logging
 from interactions import CommandContext, ComponentContext
 
-from Bot.Exeptions import NoClanTagLinked, InvalidClanTag, InvalidPlayerTag, NoPlayerTagLinked, InvalidCommandSyntax
+from Bot.Exeptions import NoClanTagLinked, InvalidClanTag, InvalidPlayerTag, NoPlayerTagLinked
 from CocApi.Clans.Clan import clan
 from CocApi.Players.Player import player
 from Database.User import User
@@ -59,8 +59,6 @@ def command_wrapper(command):
         except InvalidPlayerTag:
             await ctx.send("Your entered player tag is not valid!")
             return
-        except InvalidCommandSyntax:
-            await ctx.send("Your entered command doesn't follow the supported syntax!")
         except Exception as exception:
             await ctx.send(
                 f"Something went wrong. Please report this error on my Discord server (`/dc`). Exception:\n```diff\n- "

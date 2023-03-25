@@ -26,6 +26,7 @@ class PrivateCommands(Extension):
         await ctx.send(f"The bot in on {len(self.client.guilds)} servers.")
         return
 
+
 def setup(client: Client):
     PrivateCommands(client)
     return

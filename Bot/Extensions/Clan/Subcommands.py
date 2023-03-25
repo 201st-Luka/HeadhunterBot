@@ -95,6 +95,7 @@ async def stats(ctx: CommandContext, kwargs):
         return
     raise InvalidClanTag
 
+
 async def clan_badge(ctx: CommandContext, kwargs):
     clan_and_tag = clans2clan_and_tag(kwargs)
     if 'size' in kwargs:
@@ -113,12 +114,11 @@ async def clan_badge(ctx: CommandContext, kwargs):
         )])
     return
 
-async def table(ctx: CommandContext, clans: str, sort: int = 0, order: bool = False):
-    print(clans, sort, order)
-    clan_and_tag = clans2clan_and_tag(clans)
-    # clan_and_tag[1] = kwargs['clans'].split(' ')[-1]
-    clan_and_tag[1] = clans.split(' ')[-1]
-    response_clan = await clan(clan_and_tag[1])
+
+async def table(ctx: CommandContext, clan_tag: str, sort: int = 0, descending: bool = False):
+    response_clan = await clan(clan_tag)
+    if 'reason' in response_clan:
+        raise InvalidClanTag
     war_info = [str(response_clan['warWins']) if "warWins" in response_clan else "N/A",
                 str(response_clan['warTies']) if "warTies" in response_clan else "N/A",
                 str(response_clan['warLosses']) if "warLosses" in response_clan else "N/A"]
@@ -145,11 +145,11 @@ async def table(ctx: CommandContext, clans: str, sort: int = 0, order: bool = Fa
             Button(
                 style=ButtonStyle.LINK,
                 label="Warlog on Cocp.it",
-                url=f"https://cocp.it/clan/{clan_and_tag[1]}"
+                url=f"https://cocp.it/clan/{response_clan['tag'].strip('#')}"
             ), Button(
                 style=ButtonStyle.LINK,
                 label=f"{response_clan['name']} on ClashOfStats",
-                url=f"https://www.clashofstats.com/clans/{clan_and_tag[1]}/summary"
+                url=f"https://www.clashofstats.com/clans/{response_clan['tag'].strip('#')}/summary"
             )])
         ]
     )
@@ -168,11 +168,9 @@ async def table(ctx: CommandContext, clans: str, sort: int = 0, order: bool = Fa
             member['role'],
             member['expLevel'],
             member['tag']
-        ] for member in await player_bulk([member["tag"][1:] for member in response_clan["memberList"]])
+        ] for member in await player_bulk([member["tag"] for member in response_clan["memberList"]])
     ]
-    # sort = 0 if 'sort' not in kwargs else kwargs['sort']
-    # order = False if 'order' not in kwargs else kwargs['order']
-    members_table_list.sort(key=lambda m: m[sort], reverse=order)
+    members_table_list.sort(key=lambda m: m[sort], reverse=descending)
     max_name_len, max_tag_len = len(max([name[1] for name in members_table_list], key=len)), \
         len(max([tag[10] for tag in members_table_list], key=len))
     members_table_list = [
@@ -215,6 +213,7 @@ async def table(ctx: CommandContext, clans: str, sort: int = 0, order: bool = Fa
         for i in range(1, case + 1):
             await ctx.channel.send("".join(item for outer_list in members_table_str[i * 10:(i + 1) * 10] for item in outer_list))
     return
+
 
 async def warlog(ctx: CommandContext, kwargs):
     clan_and_tag = clans2clan_and_tag(kwargs)
