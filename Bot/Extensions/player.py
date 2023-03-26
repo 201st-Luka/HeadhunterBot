@@ -1,6 +1,7 @@
 from interactions import Client, extension_command, Option, OptionType, CommandContext, Extension, Choice, Embed
 
 from Bot.Exeptions import InvalidPlayerTag, AlreadyLinkedPlayerTag, NoPlayerTagLinked
+from Bot.Extensions.Player.linking import player_linking_info
 from Bot.Extensions.Utils.autocompletes import player_tag_auto_complete, player_auto_complete
 from CocApi.Players.Player import player as player_request, player_bulk
 from Database.User import User
@@ -57,30 +58,7 @@ class PlayerCommand(Extension):
         description="shows the linked players"
     )
     async def link_info(self, ctx: CommandContext):
-        player_tags = self.user.users.fetch_player_tags(ctx.user.id)
-        if len(player_tags) == 0:
-            await ctx.send("You don't have any linked players. Do `/player link add <player_tag>` first.")
-            return
-        player_responses = await player_bulk(player_tags)
-        embed = Embed(
-            title=f"Player accounts for {ctx.user.username}#{ctx.user.discriminator}",
-            value=f"{ctx.user.username} possesses {len(player_tags)} {'account' if len(player_tags) == 1 else 'accounts'}",
-        )
-        for player_response, player_tag in zip(player_responses[0:25], player_tags[0:25]):
-            if 'reason' in player_response:
-                embed.add_field(
-                    name=f"No information for {player_tag}",
-                    value="N/A"
-                )
-            else:
-                embed.add_field(
-                    name=f"{player_response['name']} ({player_response['tag']})",
-                    value=f"Clan: **{player_response['clan']['name']}**\n"
-                          f"Role: **{'Leader' if player_response['role'] == 'leader' else 'Co-leader' if player_response['role'] == 'coLeader' else 'Elder' if player_response['role'] == 'admin' else 'Member'}**\n"
-                          f"Town hall level: **{player_response['townHallLevel']}**\n"
-                          f"Trophies: **{player_response['trophies']}**"
-                )
-        await ctx.send(embeds=embed)
+        await player_linking_info(ctx, self.user, ctx.user)
         return
 
     @link.subcommand(

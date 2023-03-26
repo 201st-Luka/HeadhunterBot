@@ -59,12 +59,6 @@ class Users:
         return
 
     @database_logger
-    def fetch_players(self, user_id: Snowflake):
-        self.cursor.execute("SELECT player_name, player_tag FROM users WHERE user_id=?",
-                            (str(user_id),))
-        return self.cursor.fetchall()
-
-    @database_logger
     def fetch_all_player_tags(self):
         self.cursor.execute("SELECT DISTINCT player_tag FROM users")
         return tuple(player_tag[0] for player_tag in self.cursor.fetchall())

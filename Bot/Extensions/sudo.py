@@ -1,10 +1,11 @@
 from interactions import extension_command, Option, OptionType, Extension, Client, CommandContext, Permissions, Choice, \
-    User as InteractionsUser
+    User as InteractionsUser, Embed
 
 from Bot.Exeptions import InvalidClanTag, InvalidPlayerTag, AlreadyLinkedPlayerTag
+from Bot.Extensions.Player.linking import player_linking_info
 from Bot.Extensions.Utils.autocompletes import player_tag_auto_complete
 from CocApi.Clans.Clan import clan, clan_search
-from CocApi.Players.Player import player
+from CocApi.Players.Player import player, player_bulk
 from Database.User import User as DbUser
 
 
@@ -73,16 +74,26 @@ class SudoCommand(Extension):
                 required=True
             ),
             Option(
-                name="player_tag",
-                description="linked players or search player by tag",
+                name="their_player_tag",
+                description="enter their player tag",
                 type=OptionType.STRING,
-                required=True,
-                autocomplete=True
+                required=True
             )
         ]
     )
-    async def force_unlink_player(self, ctx: CommandContext, **kwargs):
-        await ctx.send(str(kwargs))
+    async def force_unlink_player(self, ctx: CommandContext, user: InteractionsUser, their_player_tag: str):
+        player_list = self.user.users.fetch_all_players_of_user(user.id)
+        if their_player_tag[0] != '#':
+            their_player_tag = "".join(('#', their_player_tag))
+        player_tag_list = [player_elem[1] for player_elem in player_list]
+        if their_player_tag in player_tag_list:
+            pos = player_tag_list.index(their_player_tag)
+            self.user.users.delete_user_player(user.id, their_player_tag)
+            await ctx.send(f"The player {player_list[pos][0]} ({player_list[pos][1]}) was unliked from the account "
+                           f"{user.username}#{user.discriminator}.")
+        else:
+            await ctx.send(f"The player tag {their_player_tag} is not linked to {user.username}#{user.discriminator}. "
+                           f"Use `/sudo user show_players_accounts` first.")
         return
 
     @user.subcommand(
@@ -97,8 +108,8 @@ class SudoCommand(Extension):
             )
         ]
     )
-    async def show_players_accounts(self, ctx: CommandContext, **kwargs):
-        await ctx.send(str(kwargs))
+    async def show_players_accounts(self, ctx: CommandContext, user: InteractionsUser):
+        await player_linking_info(ctx, self.user, user)
         return
 
     @sudo.group(name="guild")
