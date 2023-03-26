@@ -2,11 +2,11 @@ class NoClanTagLinked(Exception):
     pass
 
 
-class InvalidClanTag(Exception):
+class NoPlayerTagLinked(Exception):
     pass
 
 
-class NoPlayerTagLinked(Exception):
+class InvalidClanTag(Exception):
     pass
 
 
@@ -14,9 +14,9 @@ class InvalidPlayerTag(Exception):
     pass
 
 
-class InvalidCommandSyntax(Exception):
+class AlreadyLinkedClanTag(Exception):
     pass
 
 
-class AlreadyLinkedClanTag(Exception):
+class AlreadyLinkedPlayerTag(Exception):
     pass

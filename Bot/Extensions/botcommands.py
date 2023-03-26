@@ -3,7 +3,7 @@ from interactions import Extension, Client, extension_command, CommandContext, E
 from Bot.Variables import discordServer
 
 
-class ClearCommand(Extension):
+class BotCommand(Extension):
     client: Client
 
     def __init__(self, client: Client):
@@ -53,5 +53,5 @@ class ClearCommand(Extension):
 
 
 def setup(client: Client):
-    ClearCommand(client)
+    BotCommand(client)
     return

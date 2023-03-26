@@ -70,6 +70,12 @@ class Guilds:
         return self.cursor.fetchone()[0]
 
     @database_logger
+    def fetch_clantags(self, guild_id: Snowflake) -> tuple:
+        self.cursor.execute("SELECT clan_tag FROM guilds WHERE guild_id=?;",
+                            (str(guild_id),))
+        return tuple(clan_tag[0] for clan_tag in self.cursor.fetchall())
+
+    @database_logger
     def fetch_clanname_and_tag(self, guild_id: Snowflake):
         self.cursor.execute("SELECT clan_name, clan_tag FROM guilds WHERE guild_id=?;",
                             (str(guild_id),))

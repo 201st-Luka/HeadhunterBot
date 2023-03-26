@@ -3,8 +3,7 @@ from interactions import Extension, Client, extension_command, CommandContext, O
 from Bot.Extensions.Clan.SubcommandGroups.Components import warlog_previous_page, warlog_next_page
 from Bot.Extensions.Clan.SubcommandGroups.Currentwar_Subcommands import war_stats, lineup
 from Bot.Extensions.Clan.Subcommands import stats, table, warlog, clan_badge
-from CocApi.Clans.Clan import clan
-from CocApi.Clans.Clanwar import current_war
+from Bot.Extensions.Utils.autocompletes import clan_tag_auto_complete
 from Database.User import User
 
 
@@ -74,7 +73,7 @@ class ClanCommand(Extension):
         description="returns clan member information",
         options=[
             Option(
-                name="clans",
+                name="clan_tag",
                 description="linked clans and clan war opponent or search clan by name or tag (type '#')",
                 type=OptionType.STRING,
                 required=True,
@@ -100,7 +99,7 @@ class ClanCommand(Extension):
                 ]
             ),
             Option(
-                name="order",
+                name="descending",
                 description="changes the order to ascending/descending",
                 type=OptionType.BOOLEAN,
                 required=False,
@@ -120,7 +119,7 @@ class ClanCommand(Extension):
         description="returns the warlog of your linked clan or of the clan you have entered",
         options=[
             Option(
-                name="clans",
+                name="clan_tag",
                 description="linked clans and clan war opponent or search clan by name or tag (type '#')",
                 type=OptionType.STRING,
                 required=True,
@@ -179,24 +178,8 @@ class ClanCommand(Extension):
         return
 
     @clan.autocomplete("clan_tag")
-    async def clan_tag_autocomplete(self, ctx: CommandContext, clan_tag: str = None):
-        choices = []
-        clan_tag_of_guild = [self.user.guilds.fetch_clantag(ctx.guild_id)]
-        if clan_tag_of_guild != []:
-            clan_response = clan(clan_tag_of_guild[0])
-
-    @clan.autocomplete("clans")
-    async def stats_clans_autocomplete(self, ctx: CommandContext, *args):
-        clans = [self.user.guilds.fetch_clanname_and_tag(ctx.guild_id)]
-        current_war_response = await current_war(clans[0][1])
-        if current_war_response['state'] != 'notInWar':
-            clans.append((current_war_response['opponent']['name'], current_war_response['opponent']['tag'].strip("#")))
-        if args != ():
-            clan_response = await clan(args[0])
-            if clan_response != {"reason": "notFound"}:
-                clans.append((clan_response['name'], clan_response['tag'].strip("#")))
-        choices = [Choice(name=f"{c[0]} (#{c[1]})", value=" ".join(c)) for c in clans]
-        await ctx.populate(choices)
+    async def clan_tag_autocomplete(self, ctx: CommandContext, input_str: str = None):
+        await clan_tag_auto_complete(ctx, self.user, input_str)
         return
 
     @extension_component("button_warlog_command_next_page")

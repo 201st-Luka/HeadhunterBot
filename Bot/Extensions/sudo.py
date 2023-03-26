@@ -1,16 +1,19 @@
-from interactions import extension_command, Option, OptionType, Extension, Client, CommandContext, Permissions, Choice, extension_autocomplete
+from interactions import extension_command, Option, OptionType, Extension, Client, CommandContext, Permissions, Choice, \
+    User as InteractionsUser, Embed
 
-from Bot.Exeptions import InvalidClanTag
-from CocApi.Clans.Clan import members, clan, clan_search
-from CocApi.Players.Player import player
-from Database.User import User
+from Bot.Exeptions import InvalidClanTag, InvalidPlayerTag, AlreadyLinkedPlayerTag
+from Bot.Extensions.Player.linking import player_linking_info
+from Bot.Extensions.Utils.autocompletes import player_tag_auto_complete
+from CocApi.Clans.Clan import clan, clan_search
+from CocApi.Players.Player import player, player_bulk
+from Database.User import User as DbUser
 
 
 class SudoCommand(Extension):
     client: Client
-    user: User
+    user: DbUser
 
-    def __init__(self, client: Client, user: User):
+    def __init__(self, client: Client, user: DbUser):
         self.client = client
         self.user = user
         return
@@ -48,8 +51,16 @@ class SudoCommand(Extension):
             )
         ]
     )
-    async def force_link_player(self, ctx: CommandContext, **kwargs):
-        await ctx.send(str(kwargs))
+    async def force_link_player(self, ctx: CommandContext, user: InteractionsUser, player_tag: str):
+        if player_tag[0] != '#':
+            player_tag = "".join(('#', player_tag))
+        player_response = await player(player_tag)
+        if 'reason' in player_response:
+            raise InvalidPlayerTag
+        if player_tag in self.user.users.fetch_player_tags(user.id):
+            raise AlreadyLinkedPlayerTag
+        self.user.users.insert_user(user.id, player_response['tag'], player_response['name'])
+        await ctx.send(f"The player {player_response['name']} ({player_response['tag']}) was linked to the user {user.username}.")
         return
 
     @user.subcommand(
@@ -63,16 +74,26 @@ class SudoCommand(Extension):
                 required=True
             ),
             Option(
-                name="player_tag",
-                description="linked players or search player by tag",
+                name="their_player_tag",
+                description="enter their player tag",
                 type=OptionType.STRING,
-                required=True,
-                autocomplete=True
+                required=True
             )
         ]
     )
-    async def force_unlink_player(self, ctx: CommandContext, **kwargs):
-        await ctx.send(str(kwargs))
+    async def force_unlink_player(self, ctx: CommandContext, user: InteractionsUser, their_player_tag: str):
+        player_list = self.user.users.fetch_all_players_of_user(user.id)
+        if their_player_tag[0] != '#':
+            their_player_tag = "".join(('#', their_player_tag))
+        player_tag_list = [player_elem[1] for player_elem in player_list]
+        if their_player_tag in player_tag_list:
+            pos = player_tag_list.index(their_player_tag)
+            self.user.users.delete_user_player(user.id, their_player_tag)
+            await ctx.send(f"The player {player_list[pos][0]} ({player_list[pos][1]}) was unliked from the account "
+                           f"{user.username}#{user.discriminator}.")
+        else:
+            await ctx.send(f"The player tag {their_player_tag} is not linked to {user.username}#{user.discriminator}. "
+                           f"Use `/sudo user show_players_accounts` first.")
         return
 
     @user.subcommand(
@@ -87,13 +108,11 @@ class SudoCommand(Extension):
             )
         ]
     )
-    async def show_players_accounts(self, ctx: CommandContext, **kwargs):
-        await ctx.send(str(kwargs))
+    async def show_players_accounts(self, ctx: CommandContext, user: InteractionsUser):
+        await player_linking_info(ctx, self.user, user)
         return
 
-    @sudo.group(
-        name="guild"
-    )
+    @sudo.group(name="guild")
     async def guild(self, ctx: CommandContext):
         pass
 
@@ -111,9 +130,12 @@ class SudoCommand(Extension):
         ]
     )
     async def link_clan(self, ctx: CommandContext, clan_tag: str):
-        if await clan(clan_tag) != {'reason': 'notFound'}:
-            self.user.guilds.update_clan_tag(ctx.guild_id, clan_tag)
-            await ctx.send(f"The clan tag for this guild was successfully set to {clan_tag}.")
+        if clan_tag[0] != '#':
+            clan_tag = "".join(('#', clan_tag))
+        response_clan = await clan(clan_tag)
+        if 'reason' not in response_clan:
+            self.user.guilds.update_clan_tag_and_name(ctx.guild_id, response_clan['tag'], response_clan['name'])
+            await ctx.send(f"The clan for this guild was successfully set to {response_clan['name']} ({response_clan['tag']}).")
             return
         raise InvalidClanTag
 
@@ -123,7 +145,7 @@ class SudoCommand(Extension):
     )
     async def unset_clan(self, ctx: CommandContext):
         if self.user.guilds.fetch_clantag(ctx.guild_id) is not None:
-            self.user.guilds.update_clan_tag(ctx.guild_id, None)
+            self.user.guilds.update_clan_tag_and_name(ctx.guild_id, None, None)
             await ctx.send("The clan tag was removed.")
         else:
             await ctx.send("There is no clan tag set for this guild, so it cannot be removed.")
@@ -141,9 +163,7 @@ class SudoCommand(Extension):
             await ctx.send("There is no clan tag for this guild. You can set is using `/sudo guild link_clan <clan_tag>`.")
         return
 
-    @sudo.group(
-        name="clan_members"
-    )
+    @sudo.group(name="clan_members")
     async def clan_members(self, ctx: CommandContext):
         pass
 
@@ -210,26 +230,8 @@ class SudoCommand(Extension):
         return
 
     @sudo.autocomplete("player_tag")
-    async def player_tag_autocomplete(self, ctx: CommandContext, *args):
-        choices = []
-        if args != ():
-            arg0 = args[0].strip('#') if args[0].startswith('#') else args[0]
-            clan_tag = self.user.guilds.fetch_clantag(ctx.guild_id)
-            clan_members = await members(clan_tag)
-            for clan_member in clan_members['items']:
-                if arg0 in clan_member['name'] or arg0 in clan_member['tag']:
-                    choices.append(Choice(
-                        name=f"{clan_member['name']} ({clan_member['tag']})",
-                        value=" ".join((clan_member['name'], clan_member['tag']))
-                    ))
-            if len(choices) == 0:
-                player_response = await player(arg0)
-                if player_response != {"reason": "notFound"}:
-                    choices.append(Choice(
-                        name=f"{player_response['name']} ({player_response['tag']})",
-                        value=" ".join((player_response['name'], player_response['tag']))
-                    ))
-        await ctx.populate(choices)
+    async def player_tag_autocomplete(self, ctx: CommandContext, input_str: str = None):
+        await player_tag_auto_complete(ctx, self.user, input_str)
         return
 
     @sudo.autocomplete("clan_tag")
@@ -238,7 +240,7 @@ class SudoCommand(Extension):
             await ctx.populate([])
             return
         choices = []
-        clan_tag_response = await clan(input_str.strip('#') if input_str.startswith('#') else input_str)
+        clan_tag_response = await clan(input_str)
         if clan_tag_response != {'reason': 'notFound'}:
             choices.append(Choice(
                 name=f"{clan_tag_response['name']} {clan_tag_response['tag']}, "
@@ -262,7 +264,7 @@ class SudoCommand(Extension):
         return
 
 
-def setup(client: Client, user: User):
+def setup(client: Client, user: DbUser):
     SudoCommand(client, user)
     return
 

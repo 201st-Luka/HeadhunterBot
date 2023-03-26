@@ -2,14 +2,16 @@ import asyncio
 import aiohttp
 import json
 from Bot.Variables import clashOfClansHeaders
+from urllib.parse import quote
 
 
 async def player(player_tag: str):
     session = aiohttp.ClientSession()
     response = await session.get(
-        "https://api.clashofclans.com/v1/players/%23" + player_tag,
+        f"https://api.clashofclans.com/v1/players/{quote(player_tag)}",
         headers=clashOfClansHeaders
     )
+    await session.close()
     return await response.json()
 
 
@@ -17,7 +19,7 @@ async def player_bulk(player_list: list[str]):
     session = aiohttp.ClientSession()
     tasks = [
         session.get(
-            "https://api.clashofclans.com/v1/players/%23" + player_tag,
+            f"https://api.clashofclans.com/v1/players/{quote(player_tag)}",
             headers=clashOfClansHeaders
         ) for player_tag in player_list
     ]
