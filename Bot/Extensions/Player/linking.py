@@ -26,7 +26,7 @@ async def player_linking_info(
             )
         else:
             embed.add_field(
-                name=f"{player_response['name']} ({player_response['tag']})",
+                name=f"__{player_response['name']} ({player_response['tag']})__",
                 value=f"Clan: **{player_response['clan']['name']}**\n"
                       f"Role: **{'Leader' if player_response['role'] == 'leader' else 'Co-leader' if player_response['role'] == 'coLeader' else 'Elder' if player_response['role'] == 'admin' else 'Member'}**\n"
                       f"Town hall level: **{player_response['townHallLevel']}**\n"
