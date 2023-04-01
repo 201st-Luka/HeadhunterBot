@@ -45,3 +45,9 @@ To install HeadhunterBot, follow these steps:
 6. Lastly you have to run the `admin.py` script once to create the database with all needed tables.
 
 You're done! Happy coding.
+
+
+<!---links--->
+[discord_shield]: https://img.shields.io/badge/Discord-blue?logo=discord&logoColor=white
+[discord_url]: https://discord.gg/j2PAF9Wru8
+[last_commit_shield]: https://img.shields.io/github/last-commit/201st-Luka/HeadhunterBot
