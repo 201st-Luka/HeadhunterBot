@@ -1,10 +1,11 @@
-from interactions import Extension, Client, extension_command, CommandContext, Option, OptionType, Choice, extension_component, ComponentContext
+from interactions import Extension, Client, extension_command, CommandContext, Option, OptionType, Choice, \
+    extension_component, ComponentContext
 
-from Bot.Extensions.Clan.SubcommandGroups.Components import warlog_previous_page, warlog_next_page
-from Bot.Extensions.Clan.SubcommandGroups.Currentwar_Subcommands import war_stats, lineup
-from Bot.Extensions.Clan.Subcommands import stats, table, warlog, clan_badge
-from Bot.Extensions.Utils.autocompletes import clan_tag_auto_complete
-from Database.User import User
+from Bot.Extensions.Clan.SubcommandGroups.components import Components
+from Bot.Extensions.Clan.SubcommandGroups.currentwar_sub_commands import CurrentWarSubCommands
+from Bot.Extensions.Clan.sub_commands import SubCommands
+from Bot.Extensions.Utils.auto_completes import AutoCompletes
+from Database.user import User
 
 
 class ClanCommand(Extension):
@@ -12,15 +13,15 @@ class ClanCommand(Extension):
     user: User
 
     def __init__(self, client: Client, user: User):
+        self.components = Components()
+        self.current_war_sub_commands = CurrentWarSubCommands()
+        self.sub_commands = SubCommands()
+        self.auto_completes = AutoCompletes()
         self.client = client
         self.user = user
-        return
 
-    @extension_command(
-        name="clan",
-        default_scope=True
-    )
-    async def clan(self, ctx: CommandContext, **kwargs):
+    @extension_command(name="clan", default_scope=True)
+    async def clan(self, ctx: CommandContext, **kwargs) -> None:
         pass
 
     @clan.subcommand(
@@ -36,9 +37,8 @@ class ClanCommand(Extension):
             )
         ]
     )
-    async def stats(self, ctx: CommandContext, **kwargs):
-        await stats(ctx, kwargs)
-        return
+    async def stats(self, ctx: CommandContext, **kwargs) -> None:
+        await self.sub_commands.stats(ctx, kwargs)
 
     @clan.subcommand(
         name="clan_badge",
@@ -64,9 +64,8 @@ class ClanCommand(Extension):
             )
         ]
     )
-    async def clan_badge(self, ctx: CommandContext, **kwargs):
-        await clan_badge(ctx, kwargs)
-        return
+    async def clan_badge(self, ctx: CommandContext, **kwargs) -> None:
+        await self.sub_commands.clan_badge(ctx, kwargs)
 
     @clan.subcommand(
         name="table",
@@ -110,9 +109,8 @@ class ClanCommand(Extension):
             )
         ]
     )
-    async def table(self, ctx: CommandContext, **kwargs):
-        await table(ctx, **kwargs)
-        return
+    async def table(self, ctx: CommandContext, **kwargs) -> None:
+        await self.sub_commands.table(ctx, **kwargs)
 
     @clan.subcommand(
         name="warlog",
@@ -133,14 +131,13 @@ class ClanCommand(Extension):
             )
         ]
     )
-    async def warlog(self, ctx: CommandContext, **kwargs):
-        await warlog(ctx, kwargs)
-        return
+    async def warlog(self, ctx: CommandContext, **kwargs) -> None:
+        await self.sub_commands.warlog(ctx, kwargs)
 
     @clan.group(
         name="currentwar"
     )
-    async def currentwar(self, ctx: CommandContext):
+    async def currentwar(self, ctx: CommandContext) -> None:
         pass
 
     @currentwar.subcommand(
@@ -156,9 +153,8 @@ class ClanCommand(Extension):
             )
         ]
     )
-    async def currentwar_war_stats(self, ctx: CommandContext, **kwargs):
-        await war_stats(ctx, kwargs)
-        return
+    async def currentwar_war_stats(self, ctx: CommandContext, **kwargs) -> None:
+        await self.current_war_sub_commands.war_stats(ctx, kwargs)
 
     @currentwar.subcommand(
         name="lineup",
@@ -173,26 +169,21 @@ class ClanCommand(Extension):
             )
         ]
     )
-    async def currentwar_lineup(self, ctx: CommandContext, **kwargs):
-        await lineup(ctx, kwargs)
-        return
+    async def currentwar_lineup(self, ctx: CommandContext, **kwargs) -> None:
+        await self.current_war_sub_commands.lineup(ctx, kwargs)
 
     @clan.autocomplete("clan_tag")
-    async def clan_tag_autocomplete(self, ctx: CommandContext, input_str: str = None):
-        await clan_tag_auto_complete(ctx, self.user, input_str)
-        return
+    async def clan_tag_autocomplete(self, ctx: CommandContext, input_str: str = None) -> None:
+        await self.auto_completes.clan_tag_auto_complete(ctx, self.user, input_str)
 
     @extension_component("button_warlog_command_next_page")
-    async def button_warlog_command_next_page(self, ctx: ComponentContext):
-        await warlog_next_page(ctx)
-        return
+    async def button_warlog_command_next_page(self, ctx: ComponentContext) -> None:
+        await self.components.warlog_next_page(ctx)
 
     @extension_component("button_warlog_command_previous_page")
-    async def button_warlog_command_previous_page(self, ctx: ComponentContext):
-        await warlog_previous_page(ctx)
-        return
+    async def button_warlog_command_previous_page(self, ctx: ComponentContext) -> None:
+        await self.components.warlog_previous_page(ctx)
 
 
 def setup(client: Client, user: User):
     ClanCommand(client, user)
-    return
