@@ -1,71 +1,57 @@
-# IMPORTS -----------------------------------------------------------------------------------------
-# modules -----------------------------------------------------------------------------------------
-import interactions
 import logging
+
 import coloredlogs
+import interactions
+
+from Bot.variables import Variables
+from Database.data_base import DataBase
+from Database.user import User
 
 
-# scripts -----------------------------------------------------------------------------------------
-from Bot.Variables import log, discordApiToken  #, clashOfClansHeaders
-from Database.Data_base import DataBase
-from Database.User import User
-#from CocApi.Api import ApiInterface
+class Main:
+    def __init__(self):
+        self.logger = logging.getLogger()
+        self.db = DataBase()
+        self.user = User(self.db)
+        self.variables = Variables()
+        self.guild_id_list = self.user.guilds.fetch_guild_ids()
+        self.bot = None
+
+    def configure_logging(self, log_file, log_level=logging.INFO):
+        self.logger.setLevel(log_level)
+
+        output_file_handler = logging.FileHandler(log_file)
+        output_file_handler.setFormatter(
+            logging.Formatter("[%(asctime)s]:\t[%(levelname)s]:\t[%(name)s]:\t%(message)s"))
+
+        console_handler = logging.StreamHandler(print())
+        console_handler.setLevel(log_level)
+        console_handler.setFormatter(logging.Formatter("[%(asctime)s]:\t[%(levelname)s]:\t[%(name)s]:\t%(message)s"))
+
+        self.logger.addHandler(output_file_handler)
+        self.logger.addHandler(console_handler)
+
+        coloredlogs.install(level=log_level, logger=self.logger)
+
+    def start_bot(self):
+        self.bot = interactions.Client(token=self.variables.discord_api_token, default_scope=self.guild_id_list)
+
+        self.bot.load(f"Bot.Extensions.events", user=self.user, logger=self.logger)
+        self.bot.load(f"Bot.Extensions.activity", user=self.user)
+        self.bot.load(f"Bot.Extensions.bot_commands")
+        self.bot.load(f"Bot.Extensions.clan", user=self.user)
+        self.bot.load(f"Bot.Extensions.player", user=self.user)
+        self.bot.load(f"Bot.Extensions.private_commands")
+        self.bot.load(f"Bot.Extensions.sudo", user=self.user)
+
+        self.bot.start()
+
+    def stop_bot(self):
+        self.db.close()
 
 
-# LOGGING -----------------------------------------------------------------------------------------
-logger = logging.getLogger()
-# log.setLevel(logging.DEBUG)
-
-output_file_handler = logging.FileHandler(log)
-output_file_handler.setFormatter(logging.Formatter("[%(asctime)s]:\t[%(levelname)s]:\t[%(name)s]:\t%(message)s"))
-
-console_handler = logging.StreamHandler(print())
-console_handler.setLevel(logging.INFO)
-console_handler.setFormatter(logging.Formatter("[%(asctime)s]:\t[%(levelname)s]:\t[%(name)s]:\t%(message)s"))
-
-logger.addHandler(output_file_handler)
-logger.addHandler(console_handler)
-
-coloredlogs.install(level=logging.INFO, logger=logger)
-
-
-# DATABASE ----------------------------------------------------------------------------------------
-db = DataBase()
-user = User(db)
-
-
-# guild management
-guildIdList = user.guilds.fetch_guild_ids()
-# guildIdList = (893218147740565524)
-
-
-# COC API -----------------------------------------------------------------------------------------
-#apiInterface = ApiInterface(clashOfClansHeaders)
-
-
-# BOT ---------------------------------------------------------------------------------------------
-headhunterBot = interactions.Client(
-    token=discordApiToken,
-    default_scope=guildIdList
-)
-
-headhunterBot.load("Bot.Extensions.Events", user=user, logger=logger)
-headhunterBot.load("Bot.Extensions.activity", user=user)
-headhunterBot.load("Bot.Extensions.botcommands")
-headhunterBot.load("Bot.Extensions.clan", user=user)
-headhunterBot.load("Bot.Extensions.player", user=user)
-headhunterBot.load("Bot.Extensions.PrivateCommands")
-headhunterBot.load("Bot.Extensions.sudo", user=user)
-
-
-# BOT START ---------------------------------------------------------------------------------------
-headhunterBot.start()
-
-
-# BOT STOP ----------------------------------------------------------------------------------------
-db.close()
-#apiInterface.close()
-
-
-# weitliegende statistiken (detailliert) -> evt visualisierung mit math plot lib
-#
+if __name__ == '__main__':
+    bot = Main()
+    bot.configure_logging(bot.variables.log_file_name, log_level=logging.INFO)
+    bot.start_bot()
+    bot.stop_bot()
