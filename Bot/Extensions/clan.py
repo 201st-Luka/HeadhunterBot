@@ -21,8 +21,9 @@ class ClanCommand(Extension):
         self.user = user
 
     @extension_command(name="clan", default_scope=True)
-    async def clan(self, ctx: CommandContext, **kwargs) -> None:
-        pass
+    async def clan(self, ctx: CommandContext) -> None:
+        await ctx.defer()
+        return
 
     @clan.subcommand(
         name="stats",
