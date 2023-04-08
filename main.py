@@ -11,9 +11,10 @@ from Database.user import User
 class Main:
     def __init__(self):
         self.logger = logging.getLogger()
+        self.variables = Variables()
+        self.configure_logging(self.variables.log_file_name, log_level=logging.INFO)
         self.db = DataBase()
         self.user = User(self.db)
-        self.variables = Variables()
         self.guild_id_list = self.user.guilds.fetch_guild_ids()
         self.bot = None
 
@@ -52,6 +53,5 @@ class Main:
 
 if __name__ == '__main__':
     bot = Main()
-    bot.configure_logging(bot.variables.log_file_name, log_level=logging.INFO)
     bot.start_bot()
     bot.stop_bot()

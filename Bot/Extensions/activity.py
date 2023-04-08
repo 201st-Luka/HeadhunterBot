@@ -17,7 +17,8 @@ class ActivityCommand(Extension):
 
     @extension_command()
     async def activity(self, ctx: CommandContext) -> None:
-        pass
+        await ctx.defer()
+        return
 
     @activity.subcommand(
         group="clan",

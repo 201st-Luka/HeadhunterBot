@@ -24,7 +24,8 @@ class PlayerCommand(Extension):
 
     @player.group(name="link")
     async def link(self, ctx: CommandContext) -> None:
-        pass
+        await ctx.defer()
+        return
 
     @link.subcommand(
         name="add",

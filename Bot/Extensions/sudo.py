@@ -27,7 +27,8 @@ class SudoCommand(Extension):
         default_member_permissoins=Permissions.ADMINISTRATOR
     )
     async def sudo(self, ctx: CommandContext, **kwargs) -> None:
-        pass
+        await ctx.defer()
+        return
 
     @sudo.group(
         name="user"

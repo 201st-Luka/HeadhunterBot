@@ -20,97 +20,87 @@ class SubCommands:
         self.clan_war = ClanWar()
         self.player = Player()
 
-    async def stats(self, ctx: CommandContext, kwargs) -> None:
-        if ' ' in kwargs['clans']:
-            clan_and_tag = self.methods.clans_of_clans_and_tag(kwargs)
-            clan_and_tag[1] = kwargs['clans'].split(' ')[-1]
-            clan_response = await self.clan.clan(clan_and_tag[1])
-            warlog_json = await self.clan_war.current_war(clan_and_tag[1])
-            warlog_response = [war_clan for war_clan in warlog_json['items'] if war_clan['attacksPerMember'] == 2]
-            warlog_len = len(warlog_response)
-            if len(warlog_response) >= 20:
-                warlog_len_20 = 20
-                warlog_response_20 = warlog_response[:20]
-            else:
-                warlog_len_20 = len(warlog_response)
-                warlog_response_20 = warlog_response
-            embed_clan_info = Embed(
-                title=f"Member list for clan {clan_response['name']} ({clan_response['tag']})",
-                description=f"*{clan_response['description']}*\n"
-                            f"\nClan level: **{clan_response['clanLevel']}**\n"
-                            f"Clan points: **{clan_response['clanPoints']}**\n"
-                            f"Required trophies to join: **{clan_response['requiredTrophies']}**\n"
-                            f"Language: {clan_response['chatLanguage']['name']} ({clan_response['chatLanguage']['languageCode']})",
-                color=self.variables.embed_color,
-                timestamp=datetime.datetime.now()
-            )
-            embed_clan_info.set_thumbnail(url=clan_response['badgeUrls']['large'])
-            embed_clan_info.set_footer(f"{clan_response['members']}/50 members")
-            embed_clan_info.add_field(
-                name="War",
-                value=f"War frequency: **{clan_response['warFrequency']}**\n"
-                      f"Current war win streak: **{clan_response['warWinStreak']}**\n"
-                      f"War wins - losses - ties: **{clan_response['warWins']} - {clan_response['warLosses']} - "
-                      f"{clan_response['warTies']}**\n"
-                      f"Win probability: **{round(clan_response['warWins'] * 100 / (clan_response['warWins'] + clan_response['warLosses'] + clan_response['warTies']), 2)}%**\n"
-                      f"Average team size: **{round(sum([war['teamSize'] for war in warlog_response]) / warlog_len, 2)}**\n"
-                      f"Average stars per attack: **{round(sum([war['clan']['stars'] for war in warlog_response]) / sum([war['clan']['attacks'] for war in warlog_response]), 2)}**\n"
-                      f"Average destruction percentage: **{round(sum([war['clan']['destructionPercentage'] for war in warlog_response]) / warlog_len, 2)}%**",
-                inline=True)
-            embed_clan_info.add_field(
-                name="Last 20 wars",
-                value=f"Win probability: **{sum([100 if war['result'] == 'win' else 0 for war in warlog_response_20]) / warlog_len_20}%**\n"
-                      f"Average team size: **{round(sum([war['teamSize'] for war in warlog_response_20]) / warlog_len_20, 2)}**\n"
-                      f"Average stars per attack: **{round(sum([war['clan']['stars'] for war in warlog_response_20]) / sum([war['clan']['attacks'] for war in warlog_response_20]), 2)}**\n"
-                      f"Average destruction percentage: **{round(sum([war['clan']['destructionPercentage'] for war in warlog_response_20]) / warlog_len_20, 2)}%**",
-                inline=True)
-            embed_clan_info.add_field(
-                name="\u200b",
-                value="\u200b"
-            )
-            embed_clan_info.add_field(
-                name=f"Members ({clan_response['members']}/50)",
-                value=f"Average exp level: **{round(sum([member['expLevel'] for member in clan_response['memberList']]) / clan_response['members'])}**\n"
-                      f"Average trophies: **{round(sum([member['trophies'] for member in clan_response['memberList']]) / clan_response['members'])}**\n"
-                      f"Average versus trophies: **{round(sum([member['versusTrophies'] for member in clan_response['memberList']]) / clan_response['members'])}**\n"
-                      f"Average donations: **{round(sum([member['donations'] for member in clan_response['memberList']]) / clan_response['members'])}**\n"
-                      f"Average donations received: **{round(sum([member['donationsReceived'] for member in clan_response['memberList']]) / clan_response['members'])}**",
-                inline=True)
-            embed_clan_info.add_field(
-                name=f"Clan war league",
-                value=f"Clan war league: **{clan_response['warLeague']['name']}**",
-                inline=True)
-            if clan_response['clanCapital'] != {}:
-                embed_clan_info.add_field(
-                    name="Clan capital",
-                    value='\n'.join([
-                        f"{district['name']} hall level: **{district['districtHallLevel']}**"
-                        for district in clan_response['clanCapital']['districts']]),
-                    inline=False)
-            await ctx.send(
-                embeds=embed_clan_info,
-                components=[ActionRow(components=[
-                    Button(
-                        style=ButtonStyle.LINK,
-                        label="Warlog on Cocp.it",
-                        url=f"https://cocp.it/clan/{clan_and_tag[1]}"
-                    ), Button(
-                        style=ButtonStyle.LINK,
-                        label=f"{clan_response['name']} on ClashOfStats",
-                        url=f"https://www.clashofstats.com/clans/{clan_and_tag[1]}/summary"
-                    )])
-                ]
-            )
-        raise InvalidClanTag
-
-    async def clan_badge(self, ctx: CommandContext, kwargs) -> None:
-        clan_and_tag = self.methods.clans_of_clans_and_tag(kwargs)
-        if 'size' in kwargs:
-            size = kwargs['size']
+    async def stats(self, ctx: CommandContext, clan_tag: str = None) -> None:
+        if clan_tag is None:
+            raise InvalidClanTag
+        clan_response = await self.clan.clan(clan_tag)
+        warlog_json = await self.clan_war.war_log(clan_tag)
+        warlog_response = [war_clan for war_clan in warlog_json['items'] if war_clan['attacksPerMember'] == 2]
+        warlog_len = len(warlog_response)
+        if len(warlog_response) >= 20:
+            warlog_len_20 = 20
+            warlog_response_20 = warlog_response[:20]
         else:
-            size = "medium"
-        clan_response = await self.clan.clan(clan_and_tag[1])
-        badge_embed = Embed(title=f"Badge of **{clan_response['name']}** #{clan_and_tag[1]}")
+            warlog_len_20 = len(warlog_response)
+            warlog_response_20 = warlog_response
+        embed_clan_info = Embed(
+            title=f"Member list for clan {clan_response['name']} ({clan_response['tag']})",
+            description=f"*{clan_response['description']}*\n"
+                        f"\nClan level: **{clan_response['clanLevel']}**\n"
+                        f"Clan points: **{clan_response['clanPoints']}**\n"
+                        f"Required trophies to join: **{clan_response['requiredTrophies']}**\n"
+                        f"Language: {clan_response['chatLanguage']['name']} ({clan_response['chatLanguage']['languageCode']})",
+            color=self.variables.embed_color,
+            timestamp=datetime.datetime.now()
+        )
+        embed_clan_info.set_thumbnail(url=clan_response['badgeUrls']['large'])
+        embed_clan_info.set_footer(f"{clan_response['members']}/50 members")
+        embed_clan_info.add_field(
+            name="War",
+            value=f"War frequency: **{clan_response['warFrequency']}**\n"
+                  f"Current war win streak: **{clan_response['warWinStreak']}**\n"
+                  f"War wins - losses - ties: **{clan_response['warWins']} - {clan_response['warLosses']} - "
+                  f"{clan_response['warTies']}**\n"
+                  f"Win probability: **{round(clan_response['warWins'] * 100 / (clan_response['warWins'] + clan_response['warLosses'] + clan_response['warTies']), 2)}%**\n"
+                  f"Average team size: **{round(sum([war['teamSize'] for war in warlog_response]) / warlog_len, 2)}**\n"
+                  f"Average stars per attack: **{round(sum([war['clan']['stars'] for war in warlog_response]) / sum([war['clan']['attacks'] for war in warlog_response]), 2)}**\n"
+                  f"Average destruction percentage: **{round(sum([war['clan']['destructionPercentage'] for war in warlog_response]) / warlog_len, 2)}%**",
+            inline=True)
+        embed_clan_info.add_field(
+            name="Last 20 wars",
+            value=f"Win probability: **{sum([100 if war['result'] == 'win' else 0 for war in warlog_response_20]) / warlog_len_20}%**\n"
+                  f"Average team size: **{round(sum([war['teamSize'] for war in warlog_response_20]) / warlog_len_20, 2)}**\n"
+                  f"Average stars per attack: **{round(sum([war['clan']['stars'] for war in warlog_response_20]) / sum([war['clan']['attacks'] for war in warlog_response_20]), 2)}**\n"
+                  f"Average destruction percentage: **{round(sum([war['clan']['destructionPercentage'] for war in warlog_response_20]) / warlog_len_20, 2)}%**",
+            inline=True)
+        embed_clan_info.add_field(
+            name="\u200b",
+            value="\u200b"
+        )
+        embed_clan_info.add_field(
+            name=f"Members ({clan_response['members']}/50)",
+            value=f"Average exp level: **{round(sum([member['expLevel'] for member in clan_response['memberList']]) / clan_response['members'])}**\n"
+                  f"Average trophies: **{round(sum([member['trophies'] for member in clan_response['memberList']]) / clan_response['members'])}**\n"
+                  f"Average versus trophies: **{round(sum([member['versusTrophies'] for member in clan_response['memberList']]) / clan_response['members'])}**\n"
+                  f"Average donations: **{round(sum([member['donations'] for member in clan_response['memberList']]) / clan_response['members'])}**\n"
+                  f"Average donations received: **{round(sum([member['donationsReceived'] for member in clan_response['memberList']]) / clan_response['members'])}**",
+            inline=True)
+        embed_clan_info.add_field(
+            name=f"Clan war league",
+            value=f"Clan war league: **{clan_response['warLeague']['name']}**",
+            inline=True)
+        if clan_response['clanCapital'] != {}:
+            embed_clan_info.add_field(
+                name="Clan capital",
+                value='\n'.join([
+                    f"{district['name']} hall level: **{district['districtHallLevel']}**"
+                    for district in clan_response['clanCapital']['districts']]),
+                inline=False)
+        await ctx.send(
+            embeds=embed_clan_info,
+            components=[ActionRow(components=[
+                Button(
+                    style=ButtonStyle.LINK,
+                    label=f"{clan_response['name']} on ClashOfStats",
+                    url=f"https://www.clashofstats.com/clans/{clan_response['tag'].strip('#')}/summary"
+                )])
+            ]
+        )
+        return
+
+    async def clan_badge(self, ctx: CommandContext, clan_tag: str = None, size: str = "medium") -> None:
+        clan_response = await self.clan.clan(clan_tag)
+        badge_embed = Embed(title=f"Badge of **{clan_response['name']}** #{clan_response['tag']}")
         badge_embed.set_image(url=clan_response['badgeUrls'][size])
         await ctx.send(
             embeds=badge_embed,
@@ -221,7 +211,5 @@ class SubCommands:
                 await ctx.channel.send(
                     "".join(item for outer_list in members_table_str[i * 10:(i + 1) * 10] for item in outer_list))
 
-    async def warlog(self, ctx: CommandContext, kwargs) -> None:
-        clan_and_tag = self.methods.clans_of_clans_and_tag(kwargs)
-        page = kwargs['page'] if 'page' in kwargs else 1
-        await self.components.publish_warlog_embed(ctx, clan_and_tag[1], page, False)
+    async def warlog(self, ctx: CommandContext, clan_tag: str = None, page: int = 1) -> None:
+        await self.components.publish_warlog_embed(ctx, clan_tag, page, False)
