@@ -14,16 +14,15 @@ class CurrentWarSubCommands:
         self.clan_war = ClanWar()
         self.player = Player()
 
-    async def war_stats(self, ctx: CommandContext, kwargs) -> None:
-        clan_and_tag = self.methods.clans_of_clans_and_tag(kwargs)
-        current_war_response = await self.clan_war.current_war(clan_and_tag[1])
+    async def war_stats(self, ctx: CommandContext, clan_tag: str = None) -> None:
+        current_war_response = await self.clan_war.current_war(clan_tag)
         if current_war_response == {"reason": "notFound"}:
             raise InvalidClanTag
         if current_war_response['state'] != 'notInWar':
-            warlog_json = await self.clan_war.war_log(clan_and_tag[1])
+            warlog_json = await self.clan_war.war_log(clan_tag)
             warlog_json_opponent = await self.clan_war.war_log(current_war_response['opponent']['tag'].strip('#'))
             clans_list = (
-                (await self.clan.clan(clan_and_tag[1]),
+                (await self.clan.clan(clan_tag),
                  [war_clan for war_clan in warlog_json['items'] if war_clan['attacksPerMember'] == 2][:20]),
                 (await self.clan.clan(current_war_response['opponent']['tag'].strip('#')),
                  [war_clan for war_clan in warlog_json_opponent['items'] if
@@ -58,14 +57,15 @@ class CurrentWarSubCommands:
                 inline=True
             ) for cl in clans_list]
             await ctx.send(embeds=clans_embed)
-        await ctx.send(f"The clan **{clan_and_tag[0]}** (#{clan_and_tag[1]}) is not in a clan war.")
+        clan_response = await self.clan.clan(clan_tag)
+        await ctx.send(f"The clan **{clan_response['name']}** ({clan_tag}) is not in a clan war.")
 
-    async def lineup(self, ctx: CommandContext, kwargs) -> None:
-        clan_and_tag = self.methods.clans_of_clans_and_tag(kwargs)
-        current_war_response = await self.clan_war.current_war(clan_and_tag[1])
+    async def lineup(self, ctx: CommandContext, clan_tag) -> None:
+        current_war_response = await self.clan_war.current_war(clan_tag)
         if current_war_response == {"reason": "notFound"}:
             raise InvalidClanTag
         if current_war_response['state'] != 'notInWar':
+            print("executed")
             clans_embed = Embed(
                 title=f"{current_war_response['clan']['name']} vs. {current_war_response['opponent']['name']}"
             )
@@ -111,4 +111,5 @@ class CurrentWarSubCommands:
                     ]]
             ))
             await ctx.channel.typing
-        await ctx.send(f"The clan **{clan_and_tag[0]}** (#{clan_and_tag[1]}) is not in a clan war.")
+        clan_response = await self.clan.clan(clan_tag)
+        await ctx.send(f"The clan **{clan_response['name']}** ({clan_tag}) is not in a clan war.")

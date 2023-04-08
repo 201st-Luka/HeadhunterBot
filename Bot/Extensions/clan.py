@@ -30,7 +30,7 @@ class ClanCommand(Extension):
         description="returns statistics of the clan",
         options=[
             Option(
-                name="clans",
+                name="clan_tag",
                 description="linked clans and clan war opponent or search clan by name or tag (type '#')",
                 type=OptionType.STRING,
                 required=True,
@@ -39,14 +39,14 @@ class ClanCommand(Extension):
         ]
     )
     async def stats(self, ctx: CommandContext, **kwargs) -> None:
-        await self.sub_commands.stats(ctx, kwargs)
+        await self.sub_commands.stats(ctx, **kwargs)
 
     @clan.subcommand(
         name="clan_badge",
         description="sends the clan badge",
         options=[
             Option(
-                name="clans",
+                name="clan_tag",
                 description="linked clans and clan war opponent or search clan by name or tag (type '#')",
                 type=OptionType.STRING,
                 required=True,
@@ -66,7 +66,7 @@ class ClanCommand(Extension):
         ]
     )
     async def clan_badge(self, ctx: CommandContext, **kwargs) -> None:
-        await self.sub_commands.clan_badge(ctx, kwargs)
+        await self.sub_commands.clan_badge(ctx, **kwargs)
 
     @clan.subcommand(
         name="table",
@@ -133,7 +133,7 @@ class ClanCommand(Extension):
         ]
     )
     async def warlog(self, ctx: CommandContext, **kwargs) -> None:
-        await self.sub_commands.warlog(ctx, kwargs)
+        await self.sub_commands.warlog(ctx, **kwargs)
 
     @clan.group(
         name="currentwar"
@@ -146,7 +146,7 @@ class ClanCommand(Extension):
         description="returns statistics of clans and opponent if in war",
         options=[
             Option(
-                name="clans",
+                name="clan_tag",
                 description="linked clans and clan war opponent or search clan by name or tag (type '#')",
                 type=OptionType.STRING,
                 required=True,
@@ -155,14 +155,14 @@ class ClanCommand(Extension):
         ]
     )
     async def currentwar_war_stats(self, ctx: CommandContext, **kwargs) -> None:
-        await self.current_war_sub_commands.war_stats(ctx, kwargs)
+        await self.current_war_sub_commands.war_stats(ctx, **kwargs)
 
     @currentwar.subcommand(
         name="lineup",
         description="returns statistics of clans and opponent if in war",
         options=[
             Option(
-                name="clans",
+                name="clan_tag",
                 description="linked clans and clan war opponent or search clan by name or tag (type '#')",
                 type=OptionType.STRING,
                 required=True,
@@ -171,7 +171,7 @@ class ClanCommand(Extension):
         ]
     )
     async def currentwar_lineup(self, ctx: CommandContext, **kwargs) -> None:
-        await self.current_war_sub_commands.lineup(ctx, kwargs)
+        await self.current_war_sub_commands.lineup(ctx, **kwargs)
 
     @clan.autocomplete("clan_tag")
     async def clan_tag_autocomplete(self, ctx: CommandContext, input_str: str = None) -> None:
