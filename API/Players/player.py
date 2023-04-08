@@ -33,15 +33,8 @@ class Player:
     def player_bulk(self, player_list: list[str]) -> list[Any] | Coroutine[Any, Any, list[Any]]:
         async def get_player_bulk(player_list: list[str]) -> list[Any]:
             async with self:
-                tasks = []
-                for player_tag in player_list:
-                    tasks.append(
-                        self.session.get(f"https://api.clashofclans.com/v1/players/{quote(player_tag)}",
-                                         headers=self.variables.clash_of_clans_headers)
-                    )
-                    tasks.append(asyncio.sleep(0.2))
-                # tasks = [self.session.get(f"https://api.clashofclans.com/v1/players/{quote(player_tag)}",
-                #                           headers=self.variables.clash_of_clans_headers) for player_tag in player_list]
+                tasks = [asyncio.sleep(0.2) and self.session.get(f"https://api.clashofclans.com/v1/players/{quote(player_tag)}",
+                                                                 headers=self.variables.clash_of_clans_headers) for player_tag in player_list]
                 responses = await asyncio.gather(*tasks)
                 return [await response.json() for response in responses if response is not None]
 
