@@ -1,6 +1,6 @@
 from interactions import Embed, CommandContext
 
-from Bot.exceptions import InvalidClanTag
+from Bot.Exceptions import InvalidClanTag
 from Bot.methods import Methods
 from API.Clans.clan import Clan
 from API.Clans.clan_war import ClanWar

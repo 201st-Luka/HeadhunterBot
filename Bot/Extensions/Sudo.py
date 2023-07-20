@@ -3,7 +3,7 @@ from interactions import extension_command, Option, OptionType, Extension, Clien
 
 from Bot.Extensions.Player.linking import Linking
 from Bot.Extensions.Utils.auto_completes import AutoCompletes
-from Bot.exceptions import InvalidClanTag, InvalidPlayerTag, AlreadyLinkedPlayerTag
+from Bot.Exceptions import InvalidClanTag, InvalidPlayerTag, AlreadyLinkedPlayerTag
 from API.Clans.clan import Clan
 from API.Players.player import Player
 from Database.user import User as DbUser

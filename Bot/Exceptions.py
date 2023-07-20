@@ -18,11 +18,11 @@ class InvalidPlayerTag(Exception):
         pass
 
 
-class AlreadyLinkedClanTag:
+class AlreadyLinkedClanTag(Exception):
     def __int__(self):
         pass
 
 
-class AlreadyLinkedPlayerTag:
+class AlreadyLinkedPlayerTag(Exception):
     def __int__(self):
         pass

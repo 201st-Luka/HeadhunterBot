@@ -2,7 +2,7 @@ from interactions import Client, extension_command, Option, OptionType, CommandC
 
 from Bot.Extensions.Player.linking import Linking
 from Bot.Extensions.Utils.auto_completes import AutoCompletes
-from Bot.exceptions import InvalidPlayerTag, AlreadyLinkedPlayerTag, NoPlayerTagLinked
+from Bot.Exceptions import InvalidPlayerTag, AlreadyLinkedPlayerTag, NoPlayerTagLinked
 from API.Players.player import Player
 from Database.user import User
 

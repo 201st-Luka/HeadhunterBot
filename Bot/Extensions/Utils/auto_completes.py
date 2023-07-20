@@ -16,7 +16,8 @@ class AutoCompletes:
         """
         :param ctx: CommandContext
         :param user: User
-        :param input_player_tag: str = None         :return:
+        :param input_player_tag: str = None
+        :return:
         """
         choices = []
         clan_tag = user.guilds.fetch_clantag(ctx.guild_id)

@@ -1,6 +1,6 @@
 from interactions import CommandContext, Embed
 
-from Bot.exceptions import InvalidClanTag, AlreadyLinkedClanTag, NoClanTagLinked
+from Bot.Exceptions import InvalidClanTag, AlreadyLinkedClanTag, NoClanTagLinked
 from API.Clans.clan import Clan
 from Database.user import User
 

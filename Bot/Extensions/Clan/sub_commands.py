@@ -3,7 +3,7 @@ import datetime
 from interactions import CommandContext, Embed, ActionRow, Button, ButtonStyle
 
 from Bot.Extensions.Clan.SubcommandGroups.components import Components
-from Bot.exceptions import InvalidClanTag
+from Bot.Exceptions import InvalidClanTag
 from Bot.methods import Methods
 from Bot.variables import Variables
 from API.Clans.clan import Clan

@@ -3,7 +3,7 @@ from logging import Logger
 from interactions import Extension, Client, extension_listener, ClientPresence, StatusType, PresenceActivity, \
     PresenceActivityType, CommandContext
 
-from Bot.exceptions import NoClanTagLinked, NoPlayerTagLinked, InvalidPlayerTag, AlreadyLinkedClanTag, InvalidClanTag, \
+from Bot.Exceptions import NoClanTagLinked, NoPlayerTagLinked, InvalidPlayerTag, AlreadyLinkedClanTag, InvalidClanTag, \
     AlreadyLinkedPlayerTag
 from Database.user import User
 
