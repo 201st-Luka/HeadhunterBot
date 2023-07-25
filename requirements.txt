@@ -1,0 +1,2 @@
+interactions.py==5.8.0
+git+https://github.com/201st-Luka/PyClasher.git@v0.0.1-alpha3

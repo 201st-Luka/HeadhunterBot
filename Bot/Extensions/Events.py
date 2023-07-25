@@ -1,7 +1,7 @@
 from logging import Logger
 
-from interactions import Extension, Client, extension_listener, ClientPresence, StatusType, PresenceActivity, \
-    PresenceActivityType, CommandContext
+from interactions import Extension, Client, listen, Status, Activity, \
+    ActivityType, SlashContext
 
 from Bot.Exceptions import NoClanTagLinked, NoPlayerTagLinked, InvalidPlayerTag, AlreadyLinkedClanTag, InvalidClanTag, \
     AlreadyLinkedPlayerTag
@@ -10,15 +10,13 @@ from Database.user import User
 
 class Events(Extension):
     client: Client
-    user: User
-    logger: Logger
 
     def __init__(self, client: Client, user: User, logger: Logger):
         self.client = client
         self.user = user
         self.logger = logger
 
-    @extension_listener(name="on_ready")
+    @listen("on_ready")
     async def on_ready(self) -> None:
         self.logger.info(f"Logging in as {self.client.me.name} ({self.client.me.id})")
         guilds_bot_is_on = self.client.guilds
@@ -28,26 +26,24 @@ class Events(Extension):
                 self.user.guilds.insert_guild(guild.id, guild_name=str(guild.name))
         self.logger.info(f"Successfully logged in.")
 
-    @extension_listener(name="on_start")
+    @listen("on_start")
     async def on_start(self) -> None:
-        await self.client.change_presence(ClientPresence(
-            status=StatusType.ONLINE,
-            activities=[
-                PresenceActivity(
+        await self.client.change_presence(
+            status=Status.ONLINE,
+            activity=Activity(
                     name="in development...",
-                    type=PresenceActivityType.GAME
-                )
-            ]
-        ))
+                    type=ActivityType.GAME
+            )
+        )
         self.logger.info("The bot started.")
 
-    @extension_listener(name="on_command")
-    async def on_command(self, ctx: CommandContext) -> None:
+    @listen("on_command")
+    async def on_command(self, ctx: SlashContext) -> None:
         self.logger.info(f"The user {ctx.user.username}#{ctx.user.discriminator} ({ctx.user.id}) "
                          f"used {ctx.command.name}.")
 
-    @extension_listener(name="on_command_error")
-    async def on_command_error(self, ctx: CommandContext, exception: Exception) -> None:
+    @listen("on_command_error")
+    async def on_command_error(self, ctx: SlashContext, exception: Exception) -> None:
         match exception:
             case NoClanTagLinked():
                 await ctx.send(

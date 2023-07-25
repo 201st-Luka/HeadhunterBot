@@ -1,38 +1,29 @@
-from interactions import Client, extension_command, Option, OptionType, CommandContext, Extension
+from typing import Annotated
+from interactions import Client, SlashCommand, SlashCommandOption, OptionType, SlashContext, Extension
 
-from Bot.Extensions.Player.linking import Linking
-from Bot.Extensions.Utils.auto_completes import AutoCompletes
+from Bot.Converters.PyClasher import PlayerConverter
+from Bot.Extensions.player.linking import Linking
 from Bot.Exceptions import InvalidPlayerTag, AlreadyLinkedPlayerTag, NoPlayerTagLinked
-from API.Players.player import Player
 from Database.user import User
 
 
 class PlayerCommand(Extension):
     client: Client
-    user: User
 
-    def __init__(self, client: Client, user: User):
+    def __init__(self, client: Client):
         self.player_linking = Linking()
-        self.auto_completes = AutoCompletes()
-        self.player = Player()
         self.client = client
-        self.user = user
 
-    @extension_command(name="player", description="returns information about a player", default_scope=True)
-    async def player(self, ctx: CommandContext) -> None:
-        pass
+    player = SlashCommand(name="player", description="returns information about a player")
 
-    @player.group(name="link")
-    async def link(self, ctx: CommandContext) -> None:
-        await ctx.defer()
-        return
+    link = player.group(name="link")
 
     @link.subcommand(
-        name="add",
-        description="link a ClashOfClans account to your Discord account",
+        sub_cmd_name="add",
+        sub_cmd_description="link a ClashOfClans account to your Discord account",
         options=[
-            Option(
-                name="player_tag",
+            SlashCommandOption(
+                name="player",
                 description="enter or search a player tag",
                 type=OptionType.STRING,
                 required=True,
@@ -40,7 +31,7 @@ class PlayerCommand(Extension):
             )
         ]
     )
-    async def link_add(self, ctx: CommandContext, player_tag: str) -> None:
+    async def link_add(self, ctx: SlashContext, player_tag: str = None) -> None:
         if player_tag[0] != '#':
             player_tag = "".join(('#', player_tag))
         response_player = await self.player.player(player_tag)
@@ -52,15 +43,18 @@ class PlayerCommand(Extension):
         await ctx.send(
             f"The player {response_player['name']} ({response_player['tag']}) was successfully linked to you.")
 
-    @link.subcommand(name="info", description="shows the linked players")
-    async def link_info(self, ctx: CommandContext) -> None:
+    @link.subcommand(
+        sub_cmd_name="info",
+        sub_cmd_description="shows the linked players"
+    )
+    async def link_info(self, ctx: SlashContext) -> None:
         await self.player_linking.player_linking_info(ctx, self.user, ctx.user)
 
     @link.subcommand(
-        name="remove",
-        description="remove a player",
+        sub_cmd_name="remove",
+        sub_cmd_description="remove a player",
         options=[
-            Option(
+            SlashCommandOption(
                 name="player",
                 description="linked players",
                 type=OptionType.STRING,
@@ -69,7 +63,7 @@ class PlayerCommand(Extension):
             )
         ]
     )
-    async def link_remove(self, ctx: CommandContext, player: str) -> None:
+    async def link_remove(self, ctx: SlashContext, player: str) -> None:
         if player[0] != '#':
             player = "".join(('#', player))
         player_tags = self.user.users.fetch_player_tags(ctx.user.id)
@@ -83,13 +77,13 @@ class PlayerCommand(Extension):
         await ctx.send(f"The player {name} ({player}) was removed.")
 
     @player.autocomplete("player_tag")
-    async def player_tag(self, ctx: CommandContext, input_str: str = "") -> None:
+    async def player_tag(self, ctx: SlashContext, input_str: str = "") -> None:
         await self.auto_completes.player_tag_auto_complete(ctx, self.user, input_str)
 
-    @player.autocomplete(name="player")
-    async def player_autocomplete(self, ctx: CommandContext, input_str: str = "") -> None:
+    @player.autocomplete("player")
+    async def player_autocomplete(self, ctx: SlashContext, input_str: str = "") -> None:
         await self.auto_completes.player_auto_complete(ctx, self.user, input_str)
 
 
-def setup(client: Client, user: User) -> None:
-    PlayerCommand(client, user)
+def setup(client: Client) -> None:
+    PlayerCommand(client)

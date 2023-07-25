@@ -1,21 +1,17 @@
-from interactions import Extension, Client, extension_command, CommandContext, Embed
+from interactions import Extension, slash_command, SlashContext, Embed
 
-from Bot.variables import Variables
+from Bot.HeadhunterBot import HeadhunterClient
 
 
 class BotCommand(Extension):
-    client: Client
-
-    def __init__(self, client: Client):
-        self.variable = Variables()
+    def __init__(self, client: HeadhunterClient):
         self.client = client
 
-    @extension_command(
+    @slash_command(
         name="config",
-        default_scope=True,
         description="This command opens the configuration guide."
     )
-    async def config(self, ctx: CommandContext) -> None:
+    async def config(self, ctx: SlashContext) -> None:
         config_embed = Embed()
         config_embed.title = "**__Configuration:__**"
         config_embed.description = "This is the configuration guide for optimal usage on a Discord guild. Follow the" \
@@ -39,17 +35,17 @@ class BotCommand(Extension):
                                      "on this guild.")
         await ctx.send(embeds=config_embed)
 
-    @extension_command(
+    @slash_command(
         name="dc",
-        default_scope=True,
         description="sends a link to the *201st Community* Discord server"
     )
-    async def dc(self, ctx: CommandContext) -> None:
+    async def dc(self, ctx: SlashContext) -> None:
         await ctx.send(
-            f"The official Discord server for the {self.client.me.name} is the [201st Community]({self.variable.discord_server}) server.\n"
+            f"The official Discord server for the {self.client.me.name} is the [201st Community]({self.client.cfg['discord_server']}) server.\n"
             f"You can leave feedback, ask for features or get help setting up the Bot.\n"
-            f"{self.variable.discord_server}")
+            f"{self.client.cfg['discord_server']}"
+        )
 
 
-def setup(client: Client) -> None:
+def setup(client: HeadhunterClient) -> None:
     BotCommand(client)

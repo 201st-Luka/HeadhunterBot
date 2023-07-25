@@ -5,8 +5,12 @@ from logging.handlers import TimedRotatingFileHandler
 from os import path, listdir, getcwd
 from coloredlogs import install
 
-from interactions import Client, MISSING
-from pyclasher import PyClasherClient
+from interactions import Client, MISSING, global_autocomplete, AutocompleteContext, SlashCommandChoice
+from pyclasher import PyClasherClient, ClanRequest, ClanSearchRequest
+from pyclasher.models import ApiCodes, Clan
+
+from Database.Database import DataBase
+from Database.user import User
 
 
 class HeadhunterLogger(Logger):
@@ -23,9 +27,9 @@ class HeadhunterLogger(Logger):
     def __init__(
             self,
             log_path: str,
-            log_name: str = "HeadHunterLog",
+            log_name: str = "HeadHunterBot",
             log_level: int = INFO,
-            log_file: str = "HeadhunterLog.log",
+            log_file: str = "HeadhunterBot.log",
             log_file_suffix: str = "%Y_%m_%d"
     ):
         super().__init__(log_name, INFO)
@@ -36,6 +40,7 @@ class HeadhunterLogger(Logger):
             filename=path.join(log_path, log_file),
             when="midnight",
             backupCount=14,
+
         )
         output_file_handler.suffix = log_file_suffix
         output_file_handler.setFormatter(
@@ -61,7 +66,7 @@ class HeadhunterLogger(Logger):
 class HeadhunterClient(Client):
     def __init__(self, config: str) -> None:
         with open(config, "r") as config_json:
-            self.cfg: dict = json.load(config_json)
+            self.cfg: dict = json.load(config_json)['headhunter_bot']
 
         super().__init__(
             token=self.cfg['discord_token'],
@@ -71,17 +76,24 @@ class HeadhunterClient(Client):
         )
 
         self.cwd = getcwd()
-        self.pyclasher_client = PyClasherClient(self.cfg['tokens'])
+        self.pyclasher_client = PyClasherClient(
+            self.cfg['clash_of_clans_tokens'],
+            requests_per_second=5
+        )
+        self.db = DataBase(self.cfg['db_path'], self.cfg['db_name'], self.logger)
+
+        self.db_user = User()
+
         return
 
     async def astart(self, token: str | None = None) -> None:
-        await self.pyclasher_client.start()
+        self.pyclasher_client.start()
 
         await super().astart(token)
 
         return
 
-    async def stop(self):
+    async def stop(self) -> None:
         await super().stop()
         await self.pyclasher_client.close()
 
@@ -90,24 +102,97 @@ class HeadhunterClient(Client):
     def get_extension_names(self) -> list[str]:
         filenames = listdir(path.join(self.cwd, "Bot", "Extensions"))
 
-        return [".".join(("Bot", "Extensions", filename[:-3])) for filename in filenames if filename[0].isupper()]
+        return [".".join(("Bot", "Extensions", filename[:-3])) for filename in filenames if filename[0].isupper() and filename[-3:] == ".py"]
 
-    def load_extensions(self):
+    def load_extensions(self) -> None:
         for file in self.get_extension_names():
+            print(file)
             self.load_extension(file)
         return
 
-    def load_extension(self, name: str, package: str = None):
-        self.logger.info(f"Loading {name}.")
+    def load_extension(self, name: str, package: str = None) -> None:
+        self.logger.info(f"Loading '{name}'.")
         super().load_extension(name, package)
         return
 
-    def reload_extensions(self):
+    def reload_extensions(self) -> None:
         for file in self.get_extension_names():
             self.reload_extension(file)
         return
 
-    def reload_extension(self, name: str):
+    def reload_extension(self, name: str) -> None:
         self.logger.info(f"Reloading {name}.")
         super().reload_extension(name)
         return
+
+    @global_autocomplete(option_name="clan")
+    async def clan_autocomplete(self, ctx: AutocompleteContext, clan_str: str = None) -> None:
+        clans: list[Clan] = []
+        guild_clan = self.db_user.guilds.fetch_clantag(ctx.guild_id)
+
+        guild_count = 25
+
+        if guild_clan is not None:
+            guild_count -= 1
+            try:
+                clans.append(await ClanRequest(guild_clan).request())
+            except ApiCodes.NOT_FOUND:
+                pass
+        if clan_str is not None:
+            if clan_str.startswith("#"):
+                try:
+                    clan = await ClanRequest(clan_str).request()
+                except ApiCodes.NOT_FOUND:
+                    pass
+                else:
+                    clans.append(clan)
+
+            if len(clan_str) >= 3:
+                clan_search = await ClanSearchRequest(clan_str, limit=guild_count).request()
+                clan_search_clans = [clan for clan in clan_search]
+                clans += clan_search_clans
+
+        await ctx.send(
+            SlashCommandChoice(name=clan.name, value=", ".join((
+                f"{clan.members}/50",
+                f"Lang={clan.chat_language}",
+                f"location={clan.location}",
+                f"tag={clan.tag}"
+            ))) for clan in clans
+        )
+
+    @global_autocomplete(option_name="player")
+    async def clan_autocomplete(self, ctx: AutocompleteContext, player_str: str = None) -> None:
+        clans: list[Clan] = []
+        guild_clan = self.db_user.guilds.fetch_clantag(ctx.guild_id)
+
+        guild_count = 25
+
+        if guild_clan is not None:
+            guild_count -= 1
+            try:
+                clans.append(await ClanRequest(guild_clan).request())
+            except ApiCodes.NOT_FOUND:
+                pass
+        if clan_str is not None:
+            if clan_str.startswith("#"):
+                try:
+                    clan = await ClanRequest(clan_str).request()
+                except ApiCodes.NOT_FOUND:
+                    pass
+                else:
+                    clans.append(clan)
+
+            if len(clan_str) >= 3:
+                clan_search = await ClanSearchRequest(clan_str, limit=guild_count).request()
+                clan_search_clans = [clan for clan in clan_search]
+                clans += clan_search_clans
+
+        await ctx.send(
+            SlashCommandChoice(name=clan.name, value=", ".join((
+                f"{clan.members}/50",
+                f"Lang={clan.chat_language}",
+                f"location={clan.location}",
+                f"tag={clan.tag}"
+            ))) for clan in clans
+        )
