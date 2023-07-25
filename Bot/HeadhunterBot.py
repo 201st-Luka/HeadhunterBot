@@ -3,14 +3,17 @@ from sys import stdout
 from logging import Logger, INFO, Formatter, StreamHandler
 from logging.handlers import TimedRotatingFileHandler
 from os import path, listdir, getcwd
+from typing import Annotated
+
 from coloredlogs import install
 
 from interactions import Client, MISSING, global_autocomplete, AutocompleteContext, SlashCommandChoice
-from pyclasher import PyClasherClient, ClanRequest, ClanSearchRequest
+from pyclasher import PyClasherClient, ClanRequest, ClanSearchRequest, PlayerRequest
 from pyclasher.models import ApiCodes, Clan
 
 from Database.Database import DataBase
 from Database.user import User
+from Bot.Converters.PyClasher import PlayerConverter, ClanConverter
 
 
 class HeadhunterLogger(Logger):
@@ -126,73 +129,53 @@ class HeadhunterClient(Client):
         return
 
     @global_autocomplete(option_name="clan")
-    async def clan_autocomplete(self, ctx: AutocompleteContext, clan_str: str = None) -> None:
-        clans: list[Clan] = []
-        guild_clan = self.db_user.guilds.fetch_clantag(ctx.guild_id)
+    async def clan_autocomplete(self, ctx: AutocompleteContext, clans: Annotated[list[ClanRequest], ClanConverter]) -> None:
+        if clans is None:
+            await ctx.send([])
+            return
 
-        guild_count = 25
+        requests: list[ClanRequest] = []
 
-        if guild_clan is not None:
-            guild_count -= 1
+        for clan in clans:
             try:
-                clans.append(await ClanRequest(guild_clan).request())
+                req = await clan.request()
             except ApiCodes.NOT_FOUND:
                 pass
-        if clan_str is not None:
-            if clan_str.startswith("#"):
-                try:
-                    clan = await ClanRequest(clan_str).request()
-                except ApiCodes.NOT_FOUND:
-                    pass
-                else:
-                    clans.append(clan)
-
-            if len(clan_str) >= 3:
-                clan_search = await ClanSearchRequest(clan_str, limit=guild_count).request()
-                clan_search_clans = [clan for clan in clan_search]
-                clans += clan_search_clans
+            else:
+                requests.append(req)
 
         await ctx.send(
-            SlashCommandChoice(name=clan.name, value=", ".join((
-                f"{clan.members}/50",
-                f"Lang={clan.chat_language}",
-                f"location={clan.location}",
-                f"tag={clan.tag}"
-            ))) for clan in clans
+            SlashCommandChoice(
+                name=f"members: {clan.members}/50"
+                     f"languate: {clan.chat_language}"
+                     f"location: {clan.location}"
+                     f"tag: {clan.tag}",
+                value=clan.tag) for clan in requests[:25]
         )
+        return
 
     @global_autocomplete(option_name="player")
-    async def clan_autocomplete(self, ctx: AutocompleteContext, player_str: str = None) -> None:
-        clans: list[Clan] = []
-        guild_clan = self.db_user.guilds.fetch_clantag(ctx.guild_id)
+    async def player_autocomplete(self, ctx: AutocompleteContext, players: Annotated[list[PlayerRequest], PlayerConverter]) -> None:
+        if players is None:
+            await ctx.send([])
+            return
 
-        guild_count = 25
+        requests: list[PlayerRequest] = []
 
-        if guild_clan is not None:
-            guild_count -= 1
+        for player in players:
             try:
-                clans.append(await ClanRequest(guild_clan).request())
+                req = await player.request()
             except ApiCodes.NOT_FOUND:
                 pass
-        if clan_str is not None:
-            if clan_str.startswith("#"):
-                try:
-                    clan = await ClanRequest(clan_str).request()
-                except ApiCodes.NOT_FOUND:
-                    pass
-                else:
-                    clans.append(clan)
-
-            if len(clan_str) >= 3:
-                clan_search = await ClanSearchRequest(clan_str, limit=guild_count).request()
-                clan_search_clans = [clan for clan in clan_search]
-                clans += clan_search_clans
+            else:
+                requests.append(req)
 
         await ctx.send(
-            SlashCommandChoice(name=clan.name, value=", ".join((
-                f"{clan.members}/50",
-                f"Lang={clan.chat_language}",
-                f"location={clan.location}",
-                f"tag={clan.tag}"
-            ))) for clan in clans
+            SlashCommandChoice(
+                name=f"tag: {player.tag}, "
+                     f"clan: {player.clan.name}, "
+                     f"level: {player.exp_level}, "
+                     f"town hall: {player.town_hall_level}",
+                value=player.tag) for player in requests
         )
+        return
