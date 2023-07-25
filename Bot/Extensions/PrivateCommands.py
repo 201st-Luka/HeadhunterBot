@@ -9,7 +9,6 @@ class PrivateCommands(Extension):
 
     @slash_command(
         name="ping",
-        default_scope=True,
         description="returns the latency between the server and the bot"
     )
     async def ping(self, ctx: SlashContext) -> None:
@@ -17,7 +16,6 @@ class PrivateCommands(Extension):
 
     @slash_command(
         name="guild_count",
-        default_scope=True,
         description="returns the count of guilds the server is on"
     )
     async def guild_count(self, ctx: SlashContext) -> None:

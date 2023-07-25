@@ -4,10 +4,6 @@ from interactions import Extension, SlashContext, SlashCommandOption, OptionType
 from pyclasher import ClanWarLogRequest, ClanRequest
 from pyclasher.models import ClanWarResult
 
-# from Bot.Extensions.clan.SubcommandGroups.components import Components
-# from Bot.Extensions.clan.SubcommandGroups.currentwar_sub_commands import CurrentWarSubCommands
-# from Bot.Extensions.clan.sub_commands import SubCommands
-# from Bot.Extensions.Utils.auto_completes import AutoCompletes
 from Bot.HeadhunterBot import HeadhunterClient
 from Bot.Exceptions import InvalidClanTag
 from Bot.Converters.PyClasher import ClanConverter
@@ -142,7 +138,7 @@ class ClanCommand(Extension):
         sub_cmd_description="returns clan member information",
         options=[
             SlashCommandOption(
-                name="clan_tag",
+                name="clan",
                 description="linked clans and clan war opponent or search clan by name or tag (type '#')",
                 type=OptionType.STRING,
                 required=True,

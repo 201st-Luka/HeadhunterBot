@@ -84,22 +84,18 @@ class HeadhunterClient(Client):
             requests_per_second=5
         )
         self.db = DataBase(self.cfg['db_path'], self.cfg['db_name'], self.logger)
-
         self.db_user = User()
 
         return
 
     async def astart(self, token: str | None = None) -> None:
         self.pyclasher_client.start()
-
         await super().astart(token)
-
         return
 
     async def stop(self) -> None:
         await super().stop()
         await self.pyclasher_client.close()
-
         return
 
     def get_extension_names(self) -> list[str]:
@@ -109,7 +105,6 @@ class HeadhunterClient(Client):
 
     def load_extensions(self) -> None:
         for file in self.get_extension_names():
-            print(file)
             self.load_extension(file)
         return
 

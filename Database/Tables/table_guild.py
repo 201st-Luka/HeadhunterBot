@@ -1,3 +1,5 @@
+from os import path, getcwd
+
 from interactions import Snowflake
 
 from Database.Database import DataBase, DataBaseLogger
@@ -17,13 +19,14 @@ class TableGuilds:
         self.__db = database
 
     @DataBaseLogger()
-    def insert_guild(self, guild_id: Snowflake, guild_name: str = None, guild_owner: Snowflake = None,
-                     clan_tag: str = None, clan_name: str = None, feed_channel: Snowflake = None,
-                     warlog_channel: Snowflake = None, clantable_channel: Snowflake = None, time_zone=None):
-        with open(f'Database/Queries/json_guild.txt') as json_file:
-            self.cursor.execute(json_file.read())
-            self.__db.logger.info(f"Inserted entry '{guild_name}' of table 'guilds' in the database.")
-            self.__db.save_changes()
+    def insert_guild(self, guild_id: int, guild_name: str = None, guild_owner: int = None,
+                     clan_tag: str = None, clan_name: str = None, feed_channel: int = None,
+                     warlog_channel: int = None, clantable_channel: int = None, time_zone=None):
+        self.cursor.execute("INSERT INTO guilds VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);",
+                            (str(guild_id), guild_name, str(guild_owner), clan_tag, clan_name, str(feed_channel), str(warlog_channel), str(clantable_channel), time_zone)
+                            )
+        self.__db.logger.info(f"Inserted entry '{guild_name}' of table 'guilds' in the database.")
+        self.__db.save_changes()
 
     @DataBaseLogger()
     def delete_guild(self, guild_id: Snowflake):
@@ -43,7 +46,7 @@ class TableGuilds:
     @DataBaseLogger()
     def fetch_guild_ids(self) -> list:
         self.cursor.execute("SELECT DISTINCT guild_id FROM guilds;")
-        return self.cursor.fetchall()
+        return [guild_id for guild_id, *rest in self.cursor.fetchall()]
 
     @DataBaseLogger()
     def fetch_clan_tags(self) -> list:

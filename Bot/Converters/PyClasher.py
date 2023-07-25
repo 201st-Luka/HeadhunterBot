@@ -2,6 +2,7 @@ from interactions import BaseContext, Converter
 from pyclasher import ClanRequest, PlayerRequest, ClanMembersRequest, ClanSearchRequest
 from pyclasher.models import ApiCodes
 
+from Bot.Exceptions import InvalidPlayerTag
 from Database.user import User
 
 
@@ -49,3 +50,16 @@ class PlayerConverter(Converter):
             return None
 
         return [PlayerRequest(player) for player in players if player.startswith("#")]
+
+
+class PlayerTagConverter(Converter):
+    async def convert(self, ctx: BaseContext, player_tag: None | str) -> PlayerRequest:
+        if player_tag is None:
+            raise InvalidPlayerTag
+
+        try:
+            player = await PlayerRequest(player_tag).request()
+        except ApiCodes.NOT_FOUND:
+            raise InvalidPlayerTag
+        else:
+            return player

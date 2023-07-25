@@ -1,17 +1,16 @@
 from typing import Annotated
-from interactions import Client, SlashCommand, SlashCommandOption, OptionType, SlashContext, Extension
 
-from Bot.Converters.PyClasher import PlayerConverter
-from Bot.Extensions.player.linking import Linking
+from interactions import SlashCommand, SlashCommandOption, OptionType, SlashContext, Extension
+from pyclasher import PlayerRequest
+
+from Bot.Converters.PyClasher import PlayerTagConverter
 from Bot.Exceptions import InvalidPlayerTag, AlreadyLinkedPlayerTag, NoPlayerTagLinked
-from Database.user import User
+from Bot.Extensions.player.linking import player_linking_info
+from Bot.HeadhunterBot import HeadhunterClient
 
 
 class PlayerCommand(Extension):
-    client: Client
-
-    def __init__(self, client: Client):
-        self.player_linking = Linking()
+    def __init__(self, client: HeadhunterClient):
         self.client = client
 
     player = SlashCommand(name="player", description="returns information about a player")
@@ -31,24 +30,18 @@ class PlayerCommand(Extension):
             )
         ]
     )
-    async def link_add(self, ctx: SlashContext, player_tag: str = None) -> None:
-        if player_tag[0] != '#':
-            player_tag = "".join(('#', player_tag))
-        response_player = await self.player.player(player_tag)
-        if 'reason' in response_player:
-            raise InvalidPlayerTag
-        if player_tag in self.user.users.fetch_player_tags(ctx.user.id):
+    async def link_add(self, ctx: SlashContext, player: Annotated[PlayerRequest, PlayerTagConverter]) -> None:
+        if player.tag in self.client.db_user.users.fetch_player_tags(ctx.user.id):
             raise AlreadyLinkedPlayerTag
-        self.user.users.insert_user(ctx.user.id, response_player['tag'], response_player['name'])
-        await ctx.send(
-            f"The player {response_player['name']} ({response_player['tag']}) was successfully linked to you.")
+        self.client.db_user.users.insert_user(ctx.user.id, player.tag, player.name)
+        await ctx.send(f"The player {player.name} ({player.tag}) was successfully linked to you.")
 
     @link.subcommand(
         sub_cmd_name="info",
         sub_cmd_description="shows the linked players"
     )
     async def link_info(self, ctx: SlashContext) -> None:
-        await self.player_linking.player_linking_info(ctx, self.user, ctx.user)
+        await player_linking_info(ctx, self.client.db_user, ctx.user)
 
     @link.subcommand(
         sub_cmd_name="remove",
@@ -63,27 +56,18 @@ class PlayerCommand(Extension):
             )
         ]
     )
-    async def link_remove(self, ctx: SlashContext, player: str) -> None:
-        if player[0] != '#':
-            player = "".join(('#', player))
-        player_tags = self.user.users.fetch_player_tags(ctx.user.id)
-        if len(player_tags) == 0:
+    async def link_remove(self, ctx: SlashContext, player: Annotated[PlayerRequest, PlayerTagConverter]) -> None:
+        player_tags = self.client.db_user.users.fetch_player_tags(ctx.user.id)
+        if not len(player_tags):
             raise NoPlayerTagLinked
         if player not in player_tags:
             await ctx.send(f"The player with the tag {player} is not linked to your account.")
+            return
 
-        name = self.user.users.fetch_user_player_tag_name
-        self.user.users.delete_user_player(ctx.user.id, player)
+        name = self.client.db_user.users.fetch_user_player_tag_name(ctx.author_id, player.tag)
+        self.client.db_user.users.delete_user_player(ctx.user.id, player)
         await ctx.send(f"The player {name} ({player}) was removed.")
 
-    @player.autocomplete("player_tag")
-    async def player_tag(self, ctx: SlashContext, input_str: str = "") -> None:
-        await self.auto_completes.player_tag_auto_complete(ctx, self.user, input_str)
 
-    @player.autocomplete("player")
-    async def player_autocomplete(self, ctx: SlashContext, input_str: str = "") -> None:
-        await self.auto_completes.player_auto_complete(ctx, self.user, input_str)
-
-
-def setup(client: Client) -> None:
+def setup(client: HeadhunterClient) -> None:
     PlayerCommand(client)

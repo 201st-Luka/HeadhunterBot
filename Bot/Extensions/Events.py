@@ -1,30 +1,27 @@
 from logging import Logger
 
-from interactions import Extension, Client, listen, Status, Activity, \
-    ActivityType, SlashContext
+from interactions import Extension, listen, Status, Activity, ActivityType, SlashContext
 
 from Bot.Exceptions import NoClanTagLinked, NoPlayerTagLinked, InvalidPlayerTag, AlreadyLinkedClanTag, InvalidClanTag, \
     AlreadyLinkedPlayerTag
 from Database.user import User
+from Bot.HeadhunterBot import HeadhunterClient
 
 
 class Events(Extension):
-    client: Client
 
-    def __init__(self, client: Client, user: User, logger: Logger):
+    def __init__(self, client: HeadhunterClient):
         self.client = client
-        self.user = user
-        self.logger = logger
 
     @listen("on_ready")
     async def on_ready(self) -> None:
-        self.logger.info(f"Logging in as {self.client.me.name} ({self.client.me.id})")
+        self.client.logger.info(f"Logging in as {self.client.user.id} ({self.client.user.id})")
         guilds_bot_is_on = self.client.guilds
-        guild_ids = self.user.guilds.fetch_guild_ids()
+        guild_ids = self.client.db_user.guilds.fetch_guild_ids()
         for guild in guilds_bot_is_on:
             if guild.id not in guild_ids:
-                self.user.guilds.insert_guild(guild.id, guild_name=str(guild.name))
-        self.logger.info(f"Successfully logged in.")
+                self.client.db_user.guilds.insert_guild(guild.id, guild_name=str(guild.name))
+        self.client.logger.info(f"Successfully logged in.")
 
     @listen("on_start")
     async def on_start(self) -> None:
@@ -35,11 +32,11 @@ class Events(Extension):
                     type=ActivityType.GAME
             )
         )
-        self.logger.info("The bot started.")
+        self.client.logger.info("The bot started.")
 
     @listen("on_command")
     async def on_command(self, ctx: SlashContext) -> None:
-        self.logger.info(f"The user {ctx.user.username}#{ctx.user.discriminator} ({ctx.user.id}) "
+        self.client.logger.info(f"The user {ctx.user.username}#{ctx.user.discriminator} ({ctx.user.id}) "
                          f"used {ctx.command.name}.")
 
     @listen("on_command_error")
@@ -62,7 +59,7 @@ class Events(Extension):
                 await ctx.send(
                     f"Something went wrong. Please report this error on my Discord server (`/dc`). Exception:\n```diff\n- "
                     f"{str(exception)}```")
-                self.logger.error(
+                self.client.logger.error(
                     f"An error occurred.\n{ctx.user.username}#{ctx.user.discriminator} ({ctx.user.id}) used {ctx.command.name} "
                     f"in the channel {ctx.channel.name} ({ctx.channel.id}) on guild {ctx.guild.name} ({ctx.guild.id}).\n"
                     f"Error: {ctx.command.error_callback}\n"
@@ -70,5 +67,5 @@ class Events(Extension):
                 raise exception
 
 
-def setup(client: Client, user: User, logger: Logger) -> None:
-    Events(client, user, logger)
+def setup(client: HeadhunterClient) -> None:
+    Events(client)
