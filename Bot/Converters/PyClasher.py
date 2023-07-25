@@ -1,37 +1,40 @@
 from interactions import BaseContext, Converter
 from pyclasher import ClanRequest, PlayerRequest
 
-from Bot.HeadhunterBot import HeadhunterClient
+from Database.user import User
 
 
 class ClanConverter(Converter):
-    async def convert(self, ctx: BaseContext, clan_tag: None | str) -> None | ClanRequest:
-        client: HeadhunterClient = ctx.client
+    async def convert(self, ctx: BaseContext, clan_tag: None | str) -> None | list[ClanRequest]:
+        db_user = User()
 
-        if clan_tag is None:
-            clan_tag = client.db_user.guilds.fetch_clantag(ctx.guild_id)
+        clans: list[str] = []
 
-            if clan_tag is None:
-                return None
+        if clan_tag is not None:
+            clans.append(clan_tag)
 
-        return ClanRequest(clan_tag)
+        if guild_clan_tag := db_user.guilds.fetch_clantag(ctx.guild_id) is not None:
+            clans.append(guild_clan_tag)
+
+        if not len(clans):
+            return None
+
+        return [ClanRequest(clan) for clan in clans]
 
 
 class PlayerConverter(Converter):
-    async def convert(self, ctx: BaseContext, player_tag: str | None) -> None | list[PlayerRequest]:
-        client: HeadhunterClient = ctx.client
+    async def convert(self, ctx: BaseContext, player_tag: None | str) -> None | list[PlayerRequest]:
+        db_user = User()
 
-        player_tags: list[str] = []
+        players: list[str] = []
 
         if player_tag is not None:
-            player_tags.append(player_tag)
+            players.append(player_tag)
 
-        accounts: list = client.db_user.users.fetch_player_tags(ctx.author)
+        if len(accounts := db_user.users.fetch_player_tags(ctx.author.id)):
+            players += accounts
 
-        if len(accounts):
-            player_tags += accounts
-
-        if not len(player_tags):
+        if not len(players):
             return None
 
-        return [PlayerRequest(player) for player in player_tags if player.startswith("#")]
+        return [PlayerRequest(player) for player in players if player.startswith("#")]
