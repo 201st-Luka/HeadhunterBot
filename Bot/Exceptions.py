@@ -26,3 +26,13 @@ class AlreadyLinkedClanTag(Exception):
 class AlreadyLinkedPlayerTag(Exception):
     def __int__(self):
         pass
+
+
+class InitialisationError(Exception):
+    def __init__(self, key: str) -> None:
+        super().__init__()
+        self.key = key
+        return
+
+    def __str__(self) -> str:
+        return f"The key '{self.key}' must be an environment variable."

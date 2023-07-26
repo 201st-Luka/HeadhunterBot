@@ -1,6 +1,6 @@
 import interactions
 
-from Database.Database import DataBase, DataBaseLogger
+from Database import DataBase, DataBaseLogger
 
 
 class TableMessages:

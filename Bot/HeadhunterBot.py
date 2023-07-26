@@ -2,7 +2,7 @@ import json
 from sys import stdout
 from logging import Logger, INFO, Formatter, StreamHandler
 from logging.handlers import TimedRotatingFileHandler
-from os import path, listdir, getcwd
+from os import path, listdir, getcwd, environ
 from typing import Annotated
 
 from coloredlogs import install
@@ -11,9 +11,9 @@ from interactions import Client, MISSING, global_autocomplete, AutocompleteConte
 from pyclasher import PyClasherClient, ClanRequest, ClanSearchRequest, PlayerRequest
 from pyclasher.models import ApiCodes, Clan
 
-from Database.Database import DataBase
-from Database.user import User
+from Database import DataBase, User
 from Bot.Converters.PyClasher import PlayerConverter, ClanConverter
+from Exceptions import InitialisationError
 
 
 class HeadhunterLogger(Logger):
@@ -71,19 +71,26 @@ class HeadhunterClient(Client):
         with open(config, "r") as config_json:
             self.cfg: dict = json.load(config_json)['headhunter_bot']
 
+        env_keys = ("DISCORD_TOKEN", "CLASHOFCLANS_TOKENS", "LOG_PATH", "DB_PATH")
+        for key in env_keys:
+            if key not in environ:
+                raise InitialisationError(key)
+
         super().__init__(
-            token=self.cfg['discord_token'],
-            logger=HeadhunterLogger(self.cfg['log_folder_path']),
+            token=environ.get(env_keys[0]),
+            logger=HeadhunterLogger(environ.get(env_keys[2])),
             sync_ext=True,
-            debug_scope=self.cfg['debug_scope'] or MISSING
+            debug_scope=int(environ.get("DEBUG_SCOPE")) if "DEBUG_SCOPE" in environ else MISSING
         )
+
+        self.logger.info("Initialising the HeadhunterBot")
 
         self.cwd = getcwd()
         self.pyclasher_client = PyClasherClient(
-            self.cfg['clash_of_clans_tokens'],
+            environ.get(env_keys[1]).split(":"),
             requests_per_second=5
         )
-        self.db = DataBase(self.cfg['db_path'], self.cfg['db_name'], self.logger)
+        self.db = DataBase(environ.get(env_keys[3]), self.logger)
         self.db_user = User()
 
         return

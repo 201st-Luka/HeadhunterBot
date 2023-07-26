@@ -1,6 +1,6 @@
 from interactions import Snowflake
 
-from Database.Database import DataBase, DataBaseLogger
+from Database import DataBase, DataBaseLogger
 
 
 class TableUsers:

@@ -1,16 +1,6 @@
 {
   "headhunter_bot": {
-    "log_folder_path": "enter your path to the log folder here",
-    "db_path": "enter your path to the database here",
-    "db_name": "ender your database name here",
-    "discord_token": "enter your Discord token here",
-    "debug_scope": "enter your debug scope as an integer here",
-    "clash_of_clans_tokens": [
-      "list",
-      "your",
-      "ClashOfClans",
-      "tokens",
-      "here"
-    ]
+    "embed_color": "0x513B54",
+    "discord_server": "https://discord.com/invite/j2PAF9Wru8"
   }
 }

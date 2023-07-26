@@ -1,4 +1,4 @@
-from Database.Database import DataBase, DataBaseLogger
+from Database import DataBase, DataBaseLogger
 
 
 class TablePlayers:
@@ -12,7 +12,7 @@ class TablePlayers:
         self.connection = database.get_connection()
         self.db = database
 
-    @DataBaseLogger
+    @DataBaseLogger()
     def insert_player_as_json(self, player_json: dict, timestamp: int):
         properties = ["tag", "townHallLevel", "expLevel", "trophies", "bestTrophies", "warStars", "attackWins",
                       "defenseWins", "builderHallLevel", "versusTrophies", "bestVersusTrophies", "versusBattleWins", "role",

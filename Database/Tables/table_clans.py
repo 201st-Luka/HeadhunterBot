@@ -1,4 +1,4 @@
-from Database.Database import DataBase
+from Database import DataBase
 
 
 class TableClans:
