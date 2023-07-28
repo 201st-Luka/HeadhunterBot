@@ -1,15 +1,48 @@
 from Database import DataBase, DataBaseLogger
 
 
+Table = "players"
+
+
+def create_table(db: DataBase):
+    db.cursor.execute(
+        "CREATE TABLE players ("
+        "tag TEXT,"
+        "townHallLevel INTEGER,"
+        "expLevel INTEGER,"
+        "trophies INTEGER,"
+        "bestTrophies INTEGER,"
+        "warStars INTEGER,"
+        "attackWins INTEGER,"
+        "defenseWins INTEGER,"
+        "builderHallLevel INTEGER,"
+        "versusTrophies INTEGER,"
+        "bestVersusTrophies INTEGER,"
+        "versusBattleWins INTEGER,"
+        "role TEXT,"
+        "warPreference TEXT,"
+        "donations INTEGER,"
+        "donationsReceived INTEGER,"
+        "clanCapitalContributions INTEGER,"
+        "legendTrophies INTEGER"
+        ");"
+    )
+    db.save_changes()
+
+    DataBaseLogger.logger.info(f"Created table {Table}.")
+
+    return
+
+
 class TablePlayers:
-    table = "players"
+    table = Table
     db = None
     cursor = None
     connection = None
 
     def __init__(self, database: DataBase):
-        self.cursor = database.get_cursor()
-        self.connection = database.get_connection()
+        self.cursor = database.cursor
+        self.connection = database.connection
         self.db = database
 
     @DataBaseLogger()

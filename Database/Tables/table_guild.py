@@ -5,8 +5,32 @@ from interactions import Snowflake
 from Database import DataBase, DataBaseLogger
 
 
+Table = "guilds"
+
+
+def create_table(db: DataBase):
+    db.cursor.execute(
+        "CREATE TABLE guilds ("
+        "guild_id INTEGER,"
+        "guild_name TEXT,"
+        "guild_owner INTEGER,"
+        "clan_tag TEXT,"
+        "clan_name TEXT,"
+        "feed_channel INTEGER,"
+        "warlog_channel INTEGER,"
+        "clantable_channel INTEGER,"
+        "time_zone TEXT"
+        ");"
+    )
+    db.save_changes()
+
+    DataBaseLogger.logger.info(f"Created table {Table}.")
+
+    return
+
+
 class TableGuilds:
-    table = "guilds"
+    table = Table
     __db = None
     cursor = None
     connection = None
@@ -14,8 +38,8 @@ class TableGuilds:
     def __init__(self, database: DataBase = None):
         if database is None:
             database = DataBase()
-        self.cursor = database.get_cursor()
-        self.connection = database.get_connection()
+        self.cursor = database.cursor
+        self.connection = database.connection
         self.__db = database
 
     @DataBaseLogger()
@@ -56,7 +80,7 @@ class TableGuilds:
     @DataBaseLogger()
     def fetch_clantag(self, guild_id: Snowflake) -> None | str:
         self.cursor.execute("SELECT clan_tag FROM guilds WHERE guild_id=?;", (str(guild_id),))
-        return self.cursor.fetchone()
+        return self.cursor.fetchone()[0]
 
     @DataBaseLogger()
     def fetch_clantags(self, guild_id: Snowflake) -> list:

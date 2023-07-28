@@ -3,8 +3,26 @@ from interactions import Snowflake
 from Database import DataBase, DataBaseLogger
 
 
+Table = "users"
+
+
+def create_table(db: DataBase):
+    db.cursor.execute(
+        "CREATE TABLE users ("
+        "user_id INTEGER PRIMARY KEY,"
+        "player_tag TEXT,"
+        "player_name TEXT"
+        ");"
+    )
+    db.save_changes()
+
+    DataBaseLogger.logger.info(f"Created table {Table}.")
+
+    return
+
+
 class TableUsers:
-    table = "users"
+    table = Table
     __db = None
     cursor = None
     connection = None
@@ -12,8 +30,8 @@ class TableUsers:
     def __init__(self, database: DataBase = None):
         if database is None:
             database = DataBase()
-        self.cursor = database.get_cursor()
-        self.connection = database.get_connection()
+        self.cursor = database.cursor
+        self.connection = database.connection
         self.__db = database
 
     @DataBaseLogger()

@@ -1,13 +1,14 @@
+from typing import Annotated
+
 from interactions import Extension, SlashContext, SlashCommandOption, OptionType, SlashCommandChoice, \
     ComponentContext, component_callback, SlashCommand, AutoDefer, Embed, Timestamp, ActionRow, Button, ButtonStyle
-
 from pyclasher import ClanWarLogRequest, ClanRequest
 from pyclasher.models import ClanWarResult
+from pyclasher.bulk_requests import PlayerBulkRequest
+from pyclasher.models.Enums import ClanRole
 
 from Bot.HeadhunterBot import HeadhunterClient
-from Bot.Exceptions import InvalidClanTag
-from Bot.Converters.PyClasher import ClanConverter
-from Database.user import User
+from Bot.Converters.PyClasher import ClanConverter, ClanTagConverter
 
 
 class ClanCommand(Extension):
@@ -175,8 +176,83 @@ class ClanCommand(Extension):
             )
         ]
     )
-    async def table(self, ctx: SlashContext, **kwargs) -> None:
-        await self.sub_commands.table(ctx, **kwargs)
+    async def table(self, ctx: SlashContext, clan: Annotated[ClanRequest, ClanTagConverter], sort: int = 0, descending: bool = False) -> None:
+        embed_clan_info = Embed(
+            title=f"Member list for clan {clan.name} ({clan.tag})",
+            description=f"""
+                        *{clan.description}*
+                        \nClan level: **{clan.clan_level}**
+                        Clan points: **{clan.clan_points}**
+                        Required trophies to join: **{clan.required_trophies}**
+                        War frequency: **{clan.war_frequency.value}**
+                        Current war win streak: **{clan.war_win_streak}**
+                        War wins - losses - ties: **{clan.war_wins} - {clan.war_losses} - {clan.war_ties}**
+                        Clan war league: **{clan.war_league.name}**
+                    """,
+            color=0xFF00FF,
+            timestamp=Timestamp.now()
+        )
+        embed_clan_info.set_thumbnail(url=clan.badge_urls.large.url)
+        embed_clan_info.set_footer(f"{clan.members}/50 members")
+        await ctx.send(
+            embeds=embed_clan_info,
+            components=Button(
+                style=ButtonStyle.LINK,
+                label=f"{clan.name} on ClashOfStats",
+                url=f"https://www.clashofstats.com/clans/{clan.tag.strip('#')}/summary"
+            )
+        )
+
+        first_message = await ctx.channel.send(content="This may take a moment.\nContent is loading...")
+        await ctx.channel.trigger_typing()
+
+        player_bulk = PlayerBulkRequest.from_member_list(clan.member_list)
+        await player_bulk.request()
+
+        members_table_list = [
+            [
+                i + 1,
+                player.name,
+                player.trophies,
+                player.war_preference,
+                player.war_stars,
+                player.donations,
+                player.donations_received,
+                player.town_hall_level,
+                "leader" if player.role == ClanRole.LEADER else "co-leader" if player.role == ClanRole.COLEADER else
+                "elder" if player.role == ClanRole.ADMIN else "member",
+                player.exp_level,
+                player.tag
+            ] for i, player in enumerate(player_bulk)
+        ]
+        members_table_list.sort(key=lambda m: m[sort], reverse=descending)
+        max_name_len, max_tag_len = max([len(member[1]) for member in members_table_list] + [4]), \
+            max(len(member[10]) for member in members_table_list)
+        members_table_str = [
+            f"`{member[0]:3}  "
+            f"{member[1]:{max_name_len}}  "
+            f"{member[2]:8}  "
+            f"{member[3].value:3}  "
+            f"{member[4]:5}  "
+            f"{member[5]:9}  "
+            f"{member[6]:8}  "
+            f"{member[7]:2}  "
+            f"{member[8]:9}  "
+            f"{member[9]:5}  "
+            f"{member[10]:{max_tag_len}}`"
+            for member in members_table_list
+        ]
+
+        case = (len(members_table_str) - 1) // 10
+        await first_message.edit(content="\n".join((
+            f"`#    {'name':{max_name_len}}  trophies  war  stars  donations  "
+            f"received  th  role       level  {'tag':{max_tag_len}}`",
+            *(item for item in members_table_str[0:10])
+        )))
+        if case:
+            for i in range(1, case + 1):
+                await ctx.channel.send(
+                    "\n".join(item for item in members_table_str[i * 10:(i + 1) * 10]))
 
     @clan.subcommand(
         sub_cmd_name="warlog",

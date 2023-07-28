@@ -1,8 +1,8 @@
 from logging import Logger
 import sqlite3
-from os import path
-from time import sleep
-from typing import Callable
+from os import path, getcwd, listdir
+from importlib.util import spec_from_file_location, module_from_spec
+from typing import Callable, Any
 
 from pyclasher import MISSING
 
@@ -10,7 +10,7 @@ from pyclasher import MISSING
 class DataBaseLogger:
     logger: Logger = MISSING
 
-    def __call__(self, function: Callable) -> Callable:
+    def __call__(self, function: Callable[..., Any]) -> Callable[..., Any]:
         def wrapper(*args, **kwargs):
             DataBaseLogger.logger.info(f"Database: {function.__name__} in {str(args[0].table).lower()}.")
             return function(*args, **kwargs)
@@ -43,7 +43,31 @@ class DataBase:
             self.__db = sqlite3.connect(self.path)
             self.__c = self.__db.cursor()
             self.logger.info(f"Connected to '{self.path}'.")
+
+            self.__check_tables()
+
             return
+
+    def __check_tables(self) -> None:
+        cwd = getcwd()
+        tables_path = path.join(cwd, "Database", "Tables")
+        py_files = [module for module in listdir(tables_path) if module[-3:] == ".py"]
+
+        query = "SELECT name FROM sqlite_master WHERE type='table' AND name=?"
+        for file in py_files:
+            file_path = path.join("Database", "Tables", file)
+
+            spec = spec_from_file_location(file, file_path)
+            module = module_from_spec(spec)
+            spec.loader.exec_module(module)
+
+            self.__c.execute(query, (module.Table,))
+            result = self.__c.fetchall()
+
+            if not result:
+                module.create_table(self)
+
+        return
 
     def close(self):
         self.__db.commit()
@@ -54,8 +78,10 @@ class DataBase:
         self.__db.commit()
         self.logger.info(f"Saved '{self.path}'")
 
-    def get_connection(self):
+    @property
+    def connection(self):
         return self.__db
 
-    def get_cursor(self):
+    @property
+    def cursor(self):
         return self.__c

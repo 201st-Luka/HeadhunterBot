@@ -3,8 +3,28 @@ import interactions
 from Database import DataBase, DataBaseLogger
 
 
+Table = "messages"
+
+
+def create_table(db: DataBase):
+    db.cursor.execute(
+        "CREATE TABLE messages ("
+        "message_id INTEGER,"
+        "message_type INTEGER,"
+        "type_value INTEGER,"
+        "message_time_stamp INTEGER,"
+        "tag TEXT"
+        ");"
+    )
+    db.save_changes()
+
+    DataBaseLogger.logger.info(f"Created table {Table}.")
+
+    return
+
+
 class TableMessages:
-    table = "messages"
+    table = Table
     __db = None
     cursor = None
     connection = None
@@ -12,8 +32,8 @@ class TableMessages:
     def __init__(self, database: DataBase = None):
         if database is None:
             database = DataBase()
-        self.cursor = database.get_cursor()
-        self.connection = database.get_connection()
+        self.cursor = database.cursor
+        self.connection = database.connection
         self.__db = database
 
     @DataBaseLogger()

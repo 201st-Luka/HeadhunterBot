@@ -2,18 +2,17 @@ import json
 from sys import stdout
 from logging import Logger, INFO, Formatter, StreamHandler
 from logging.handlers import TimedRotatingFileHandler
-from os import path, listdir, getcwd, environ
+from os import path, listdir, getcwd, environ, mkdir
 from typing import Annotated
 
 from coloredlogs import install
-
 from interactions import Client, MISSING, global_autocomplete, AutocompleteContext, SlashCommandChoice
 from pyclasher import PyClasherClient, ClanRequest, ClanSearchRequest, PlayerRequest
 from pyclasher.models import ApiCodes, Clan
 
 from Database import DataBase, User
 from Bot.Converters.PyClasher import PlayerConverter, ClanConverter
-from Exceptions import InitialisationError
+from Bot.Exceptions import InitialisationError
 
 
 class HeadhunterLogger(Logger):
@@ -76,6 +75,16 @@ class HeadhunterClient(Client):
             if key not in environ:
                 raise InitialisationError(key)
 
+        self.cwd = getcwd()
+
+        headhunter_dir = listdir(self.cwd)
+        try:
+            listdir(environ.get(env_keys[2]))
+        except FileNotFoundError:
+            mkdir(environ.get(env_keys[2]))
+            with open(path.join(environ.get(env_keys[2]), "HeadhunterBot.log"), "w") as f:
+                pass
+
         super().__init__(
             token=environ.get(env_keys[0]),
             logger=HeadhunterLogger(environ.get(env_keys[2])),
@@ -85,7 +94,6 @@ class HeadhunterClient(Client):
 
         self.logger.info("Initialising the HeadhunterBot")
 
-        self.cwd = getcwd()
         self.pyclasher_client = PyClasherClient(
             environ.get(env_keys[1]).split(":"),
             requests_per_second=5
@@ -131,33 +139,75 @@ class HeadhunterClient(Client):
         return
 
     @global_autocomplete(option_name="clan")
-    async def clan_autocomplete(self, ctx: AutocompleteContext, clans: Annotated[list[ClanRequest], ClanConverter]) -> None:
-        if clans is None:
-            await ctx.send([])
-            return
+    async def clan_autocomplete(self, ctx: AutocompleteContext) -> None:
+        clans: list[Clan] = []
+        clan_search: list[Clan] = []
 
-        requests: list[ClanRequest] = []
+        ctx_clan: str = ctx.kwargs['clan']
 
-        for clan in clans:
+        if len(ctx_clan):
+            if ctx_clan.startswith("#"):
+                try:
+                    clan = await ClanRequest(ctx_clan).request()
+                except ApiCodes.NOT_FOUND:
+                    pass
+                else:
+                    clans.append(clan)
+
+            if len(ctx_clan) >= 3:
+                clan_search = list((await ClanSearchRequest(ctx_clan).request()).items)
+
+        if db_clan := self.db_user.guilds.fetch_clantag(ctx.guild_id) is not None:
+            db_clan_req = await ClanRequest(db_clan).request()
+            if ctx_clan in db_clan_req.name or ctx_clan in db_clan_req.tag:
+                clans.append(db_clan_req)
+
+        clan_players: list[PlayerRequest] = []
+        db_players = self.db_user.users.fetch_all_players_of_user(ctx.author_id)
+        for _, player_tag in db_players:
             try:
-                req = await clan.request()
-            except ApiCodes.NOT_FOUND:
-                pass
+                player_req = await PlayerRequest(player_tag).request()
+            except ApiCodes.NOT_FOUND.value:
+                continue
             else:
-                requests.append(req)
+                if ctx_clan in player_req.clan.name or ctx_clan in player_req.clan.tag:
+                    clan_players.append(player_req)
 
-        await ctx.send(
+        clan_choices = [
             SlashCommandChoice(
-                name=f"members: {clan.members}/50"
-                     f"languate: {clan.chat_language}"
-                     f"location: {clan.location}"
-                     f"tag: {clan.tag}",
-                value=clan.tag) for clan in requests[:25]
-        )
+                name=f"{clan.name}, "
+                     f"tag: {clan.tag}, "
+                     f"location: {clan.location.name}, "
+                     f"members: {clan.members}/50",
+                value=clan.tag
+            ) for clan in clans
+        ]
+        player_choices = [
+            SlashCommandChoice(
+                name=f"{player.clan.name}, "
+                     f"tag: {player.clan.tag} "
+                     f"(from player {player.name}{player.tag})",
+                value=player.clan.tag
+            ) for player in clan_players
+        ]
+        search_choices = [
+            SlashCommandChoice(
+                name=f"{clan.name}, "
+                     f"tag: {clan.tag}, "
+                     f"location: {clan.location.name}, "
+                     f"members: {clan.members}/50",
+                value=clan.tag
+            ) for clan in clan_search
+        ]
+
+        choices = clan_choices + player_choices + search_choices
+        choices = [choice for i, choice in enumerate(choices) if choice.value not in (choice_.value for choice_ in choices[:i])][:25]
+
+        await ctx.send(choices)
         return
 
     @global_autocomplete(option_name="player")
-    async def player_autocomplete(self, ctx: AutocompleteContext, players: Annotated[list[PlayerRequest], PlayerConverter]) -> None:
+    async def player_autocomplete(self, ctx: AutocompleteContext) -> None:
         if players is None:
             await ctx.send([])
             return

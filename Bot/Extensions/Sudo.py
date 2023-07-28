@@ -24,6 +24,8 @@ class SudoCommand(Extension):
         name="user"
     )
 
+    guild = sudo.group(name="guild")
+
     @user.subcommand(
         sub_cmd_name="force_link_player",
         sub_cmd_description="force links a player account to a Discord account",
@@ -97,8 +99,6 @@ class SudoCommand(Extension):
     )
     async def show_players_accounts(self, ctx: SlashContext, user: User) -> None:
         await player_linking_info(ctx, self.client.db_user, user)
-
-    guild = sudo.group(name="guild")
 
     @guild.subcommand(
         sub_cmd_name="link_clan",

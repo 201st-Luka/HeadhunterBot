@@ -35,9 +35,16 @@ These features are aimed at improving the functionality and usefulness of the He
 To install HeadhunterBot, follow these steps:
 
 1. Copy the repository to your local machine.
-2. Install the following libraries: 
+2. Install the requirements: 
    - [interactions](https://pypi.org/project/discord-py-interactions/) (`pip install -U discord-py-interactions`) 
    - [coloredlogs](https://pypi.org/project/coloredlogs/) (`pip install coloredlogs`)
+   - [pyclasher](https://github.com/201st-Luka/PyClasher.git@v1.0.0-alpha1) (`pip install git+https://github.com/201st-Luka/PyClasher.git@v1.0.0-alpha1`)
+   
+   by simply running
+   
+   ```bash
+   pip install -r requirements.txt
+   ```
    
 3. Register a Discord bot on the official Discord site [here](https://discord.com/developers/applications). Manually copy the token in the `Bot/Variables.py` file to the `discord_api_token` variable.
 4. Create a ClashofClans API key on the [official ClashOfClans site](https://developer.clashofclans.com/#/) here. Copy the token and paste it in the `Bot/Variables.py` file, replacing the authorization bearer in the `clash_of_clans_headers` dict.
