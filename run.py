@@ -1,4 +1,13 @@
+from pyclasher import Missing
+
 from Bot.HeadhunterBot import HeadhunterClient
+
+
+def Missing__str__(self) -> str:
+    return "N/A"
+
+
+Missing.__str__ = Missing__str__
 
 
 if __name__ == '__main__':

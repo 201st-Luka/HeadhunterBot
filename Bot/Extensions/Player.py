@@ -3,8 +3,8 @@ from typing import Annotated
 from interactions import SlashCommand, SlashCommandOption, OptionType, SlashContext, Extension
 from pyclasher import PlayerRequest
 
-from Bot.Converters.PyClasher import PlayerTagConverter
-from Bot.Exceptions import InvalidPlayerTag, AlreadyLinkedPlayerTag, NoPlayerTagLinked
+from Bot.Interactions.Converters import PlayerTagConverter
+from Bot.Exceptions import AlreadyLinkedPlayerTag, NoPlayerTagLinked
 from Bot.Extensions.player.linking import player_linking_info
 from Bot.HeadhunterBot import HeadhunterClient
 

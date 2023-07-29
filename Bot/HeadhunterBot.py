@@ -3,7 +3,6 @@ from sys import stdout
 from logging import Logger, INFO, Formatter, StreamHandler
 from logging.handlers import TimedRotatingFileHandler
 from os import path, listdir, getcwd, environ, mkdir
-from typing import Annotated
 
 from coloredlogs import install
 from interactions import Client, MISSING, global_autocomplete, AutocompleteContext, SlashCommandChoice
@@ -11,7 +10,6 @@ from pyclasher import PyClasherClient, ClanRequest, ClanSearchRequest, PlayerReq
 from pyclasher.models import ApiCodes, Clan
 
 from Database import DataBase, User
-from Bot.Converters.PyClasher import PlayerConverter, ClanConverter
 from Bot.Exceptions import InitialisationError
 
 
@@ -88,7 +86,9 @@ class HeadhunterClient(Client):
         super().__init__(
             token=environ.get(env_keys[0]),
             logger=HeadhunterLogger(environ.get(env_keys[2])),
-            sync_ext=True,
+            delete_unused_application_cmds=True,
+            sync_interactions=True,
+            send_command_tracebacks=False,
             debug_scope=int(environ.get("DEBUG_SCOPE")) if "DEBUG_SCOPE" in environ else MISSING
         )
 

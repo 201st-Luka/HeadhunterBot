@@ -59,7 +59,7 @@ class ClanTagConverter(Converter):
 
         try:
             clan = await ClanRequest(clan_tag).request()
-        except ApiCodes.NOT_FOUND:
+        except type(ApiCodes.NOT_FOUND.value):
             raise InvalidClanTag
         else:
             return clan

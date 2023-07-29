@@ -1,6 +1,7 @@
 {
   "headhunter_bot": {
     "embed_color": "0x513B54",
-    "discord_server": "https://discord.com/invite/j2PAF9Wru8"
+    "discord_server": "https://discord.com/invite/j2PAF9Wru8",
+    "wars_per_page": 10
   }
 }
