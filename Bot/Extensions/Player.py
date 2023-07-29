@@ -102,13 +102,7 @@ class PlayerCommand(Extension):
         sub_cmd_name="remove",
         sub_cmd_description="remove a player",
         options=[
-            SlashCommandOption(
-                name="player",
-                description="linked players",
-                type=OptionType.STRING,
-                required=True,
-                autocomplete=True
-            )
+            PlayerOption
         ]
     )
     async def remove(self, ctx: SlashContext, player: Annotated[PlayerRequest, PlayerTagConverter]) -> None:
