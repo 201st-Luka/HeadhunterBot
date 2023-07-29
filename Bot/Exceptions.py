@@ -29,7 +29,17 @@ class InvalidClanTag(HeadhunterException):
 
 
 class InvalidPlayerTag(HeadhunterException):
-    pass
+    def __init__(self, player_tag: str = None) -> None:
+        super().__init__()
+        self.tag = player_tag
+        return
+
+    def __str__(self) -> str:
+        if hasattr(self, 'tag') and self.tag is not None:
+            return (f"The provided player tag '{self.tag}' is not a valid player tag. Make sure that the tag starts "
+                    f"with '#' and is existing in ClashOfClans.")
+        return (f"The provided player tag is not a valid player tag. Make sure that the tag starts "
+                f"with '#' and is existing in ClashOfClans.")
 
 
 class AlreadyLinkedClanTag(HeadhunterException):
@@ -37,7 +47,15 @@ class AlreadyLinkedClanTag(HeadhunterException):
 
 
 class AlreadyLinkedPlayerTag(HeadhunterException):
-    pass
+    def __init__(self, player_tag: str = None):
+        super().__init__()
+        self.tag = player_tag
+        return
+
+    def __str__(self) -> str:
+        if hasattr(self, 'tag') and self.tag is not None:
+            return f"The player tag {self.tag} has already been linked."
+        return "This player tag has already been linked."
 
 
 class InitialisationError(HeadhunterException):

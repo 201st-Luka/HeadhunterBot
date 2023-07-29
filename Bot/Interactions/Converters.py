@@ -41,7 +41,7 @@ class PlayerConverter(Converter):
         if clan := db_user.guilds.fetch_clantag(ctx.guild_id) is not None:
             try:
                 clan_members = await ClanMembersRequest(clan).request()
-            except ApiCodes.NOT_FOUND:
+            except type(ApiCodes.NOT_FOUND.value):
                 pass
             else:
                 players += [member.tag for member in clan_members if player_str in member.tag or player_str in member.name]
@@ -72,7 +72,7 @@ class PlayerTagConverter(Converter):
 
         try:
             player = await PlayerRequest(player_tag).request()
-        except ApiCodes.NOT_FOUND:
+        except type(ApiCodes.NOT_FOUND.value):
             raise InvalidPlayerTag
         else:
             return player

@@ -264,12 +264,12 @@ class ClanCommand(Extension):
             f"{member[7]:2}  "
             f"{member[8]:9}  "
             f"{member[9]:5}  "
-            f"{member[10]:{max_tag_len}}`"
+            f"{member[10]:{max_tag_len}} `"
             for member in members_table_list
         ]
 
         await first_message.edit(content="\n".join((
-            f"` #   {'name':{max_name_len}}  trophies  war  stars  donations  "
+            f"`  #  {'name':{max_name_len}}  trophies  war  stars  donations  "
             f"received  th  role       level  {'tag':{max_tag_len}}`",
             *(item for item in members_table_str[0:10])
         )))

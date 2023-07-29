@@ -6,8 +6,9 @@ from os import path, listdir, getcwd, environ, mkdir
 
 from coloredlogs import install
 from interactions import Client, MISSING, global_autocomplete, AutocompleteContext, SlashCommandChoice
-from pyclasher import PyClasherClient, ClanRequest, ClanSearchRequest, PlayerRequest
+from pyclasher import PyClasherClient, ClanRequest, ClanSearchRequest, PlayerRequest, ClanMembersRequest
 from pyclasher.models import ApiCodes, Clan
+from pyclasher.bulk_requests import PlayerBulkRequest
 
 from Database import DataBase, User
 from Bot.Exceptions import InitialisationError
@@ -75,7 +76,6 @@ class HeadhunterClient(Client):
 
         self.cwd = getcwd()
 
-        headhunter_dir = listdir(self.cwd)
         try:
             listdir(environ.get(env_keys[2]))
         except FileNotFoundError:
@@ -157,7 +157,7 @@ class HeadhunterClient(Client):
             if len(ctx_clan) >= 3:
                 clan_search = list((await ClanSearchRequest(ctx_clan).request()).items)
 
-        if db_clan := self.db_user.guilds.fetch_clantag(ctx.guild_id) is not None:
+        if (db_clan := self.db_user.guilds.fetch_clantag(ctx.guild_id)) is not None:
             db_clan_req = await ClanRequest(db_clan).request()
             if ctx_clan in db_clan_req.name or ctx_clan in db_clan_req.tag:
                 clans.append(db_clan_req)
@@ -208,26 +208,41 @@ class HeadhunterClient(Client):
 
     @global_autocomplete(option_name="player")
     async def player_autocomplete(self, ctx: AutocompleteContext) -> None:
-        if players is None:
-            await ctx.send([])
-            return
-
         requests: list[PlayerRequest] = []
 
-        for player in players:
+        if len(user_players := self.db_user.users.fetch_player_tags(ctx.user.id)):
+            for tag in user_players:
+                try:
+                    req = await PlayerRequest(tag).request()
+                except type(ApiCodes.NOT_FOUND.value):
+                    pass
+                else:
+                    requests.append(req)
+        if (clan_tag := self.db_user.guilds.fetch_clantag(ctx.guild_id)) is not None:
             try:
-                req = await player.request()
-            except ApiCodes.NOT_FOUND:
+                clan_members = await ClanMembersRequest(clan_tag).request()
+                player_bulk = await PlayerBulkRequest.from_member_list(clan_members).request()
+            except type(ApiCodes.NOT_FOUND.value):
+                pass
+            else:
+                requests += list(player_bulk)
+
+        if ctx.kwargs['player'].startswith('#'):
+            try:
+                req = await PlayerRequest(ctx.kwargs['player']).request()
+            except type(ApiCodes.NOT_FOUND.value):
                 pass
             else:
                 requests.append(req)
 
         await ctx.send(
-            SlashCommandChoice(
-                name=f"tag: {player.tag}, "
+            [SlashCommandChoice(
+                name=f"{player.name}, "
+                     f"tag: {player.tag}, "
                      f"clan: {player.clan.name}, "
                      f"level: {player.exp_level}, "
                      f"town hall: {player.town_hall_level}",
-                value=player.tag) for player in requests
+                value=player.tag
+            ) for player in requests if ctx.kwargs['player'] in player.name or ctx.kwargs['player'] in player.tag][:25]
         )
         return
