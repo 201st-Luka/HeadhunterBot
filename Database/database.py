@@ -11,7 +11,7 @@ class DataBaseLogger:
     logger: Logger = MISSING
 
     def __call__(self, function: Callable[..., Any]) -> Callable[..., Any]:
-        def wrapper(*args, **kwargs):
+        def wrapper(*args, **kwargs) -> Any:
             DataBaseLogger.logger.info(f"Database: {function.__name__} in {str(args[0].table).lower()}.")
             return function(*args, **kwargs)
 

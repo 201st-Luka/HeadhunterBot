@@ -58,7 +58,7 @@ class TablePlayers:
                         [5, 6, 10, 12, 13, 14, 16, 21, 23, 27, 31, 33, 35, 39, 40, 41, 42, 28, timestamp]]
         placeholders = ", ".join("?" for _ in properties)
 
-        query = f"INSERT INTO {self.table} ({', '.join(properties)}, timestamp) VALUES ({placeholders}, ?)"
+        query = f"INSERT INTO {self.table} ({', '.join(properties)}, timestamp) VALUES ({placeholders}, ?);"
         values.append(timestamp)
 
         self.cursor.execute(query, tuple(values + achievements))
