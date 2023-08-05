@@ -33,7 +33,7 @@ class HeadhunterLogger(Logger):
             log_file: str = "HeadhunterBot.log",
             log_file_suffix: str = "%Y_%m_%d"
     ):
-        super().__init__(log_name, INFO)
+        super().__init__(log_name, log_level)
 
         self.log_format = Formatter(self.log_format_str)
 
@@ -113,13 +113,13 @@ class HeadhunterClient(Client):
         await self.pyclasher_client.close()
         return
 
-    def get_extension_names(self) -> list[str]:
+    def _get_extension_names(self) -> list[str]:
         filenames = listdir(path.join(self.cwd, "Bot", "Extensions"))
 
         return [".".join(("Bot", "Extensions", filename[:-3])) for filename in filenames if filename[0].isupper() and filename[-3:] == ".py"]
 
     def load_extensions(self) -> None:
-        for file in self.get_extension_names():
+        for file in self._get_extension_names():
             self.load_extension(file)
         return
 
@@ -129,7 +129,7 @@ class HeadhunterClient(Client):
         return
 
     def reload_extensions(self) -> None:
-        for file in self.get_extension_names():
+        for file in self._get_extension_names():
             self.reload_extension(file)
         return
 
