@@ -1,7 +1,7 @@
-from logging import Logger
-import sqlite3
-from os import path, getcwd, listdir
 from importlib.util import spec_from_file_location, module_from_spec
+from logging import Logger
+from os import path, getcwd, listdir
+from sqlite3 import connect
 from typing import Callable, Any
 
 from pyclasher import MISSING
@@ -40,7 +40,7 @@ class DataBase:
             self.logger.info("Initialising the Database")
             DataBaseLogger.logger = self.logger
             self.path = db_path
-            self.__db = sqlite3.connect(self.path)
+            self.__db = connect(self.path)
             self.__c = self.__db.cursor()
             self.logger.info(f"Connected to '{self.path}'.")
 

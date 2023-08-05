@@ -1,8 +1,6 @@
-import interactions
 from interactions import Snowflake
 
 from Database import DataBase, DataBaseLogger
-
 
 Table = "guild_blacklist"
 

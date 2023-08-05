@@ -1,6 +1,3 @@
-from pyclasher.models import BaseClan
-
-
 class HeadhunterException(Exception):
     def __str__(self) -> str:
         return "HeadhunterException"

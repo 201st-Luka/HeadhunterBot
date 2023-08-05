@@ -15,3 +15,11 @@ PlayerOption = SlashCommandOption(
     required=True,
     autocomplete=True
 )
+
+MemberOption = SlashCommandOption(
+    name="member",
+    description="clan member",
+    type=OptionType.STRING,
+    required=True,
+    autocomplete=True
+)

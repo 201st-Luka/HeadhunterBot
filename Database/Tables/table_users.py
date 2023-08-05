@@ -1,9 +1,9 @@
-from typing import Generator
-
 from interactions import Snowflake
 
 from Database import DataBase, DataBaseLogger
+from interactions import Snowflake
 
+from Database import DataBase, DataBaseLogger
 
 Table = "users"
 

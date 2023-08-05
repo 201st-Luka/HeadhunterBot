@@ -1,14 +1,13 @@
 from typing import Annotated
 
-from interactions import SlashCommand, SlashCommandOption, OptionType, SlashContext, Extension, Embed, Color
+from interactions import SlashCommand, SlashContext, Extension, Embed, Color
 from interactions.ext.paginators import Paginator
 from pyclasher import PlayerRequest
-from pyclasher.bulk_requests import PlayerBulkRequest
 from pyclasher.models.Enums import ClanRole, ApiCodes
 
-from Bot.Interactions.Converters import PlayerTagConverter
 from Bot.Exceptions import AlreadyLinkedPlayerTag, NoPlayerTagLinked, InvalidPlayerTag
 from Bot.HeadhunterBot import HeadhunterClient
+from Bot.Interactions.Converters import PlayerTagConverter
 from Bot.Interactions.SlashCommandOptions import PlayerOption
 
 

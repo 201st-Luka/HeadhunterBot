@@ -1,9 +1,9 @@
-from os import path, getcwd
-
 from interactions import Snowflake
 
 from Database import DataBase, DataBaseLogger
+from interactions import Snowflake
 
+from Database import DataBase, DataBaseLogger
 
 Table = "guilds"
 

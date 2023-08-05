@@ -1,17 +1,17 @@
 import json
-from sys import stdout
 from logging import Logger, INFO, Formatter, StreamHandler
 from logging.handlers import TimedRotatingFileHandler
 from os import path, listdir, getcwd, environ, mkdir
+from sys import stdout
 
 from coloredlogs import install
 from interactions import Client, MISSING, global_autocomplete, AutocompleteContext, SlashCommandChoice
 from pyclasher import PyClasherClient, ClanRequest, ClanSearchRequest, PlayerRequest, ClanMembersRequest
-from pyclasher.models import ApiCodes, Clan
 from pyclasher.bulk_requests import PlayerBulkRequest
+from pyclasher.models import ApiCodes, Clan
 
-from Database import DataBase, User
 from Bot.Exceptions import InitialisationError
+from Database import DataBase, User
 
 
 class HeadhunterLogger(Logger):
@@ -116,7 +116,8 @@ class HeadhunterClient(Client):
     def _get_extension_names(self) -> list[str]:
         filenames = listdir(path.join(self.cwd, "Bot", "Extensions"))
 
-        return [".".join(("Bot", "Extensions", filename[:-3])) for filename in filenames if filename[0].isupper() and filename[-3:] == ".py"]
+        return [".".join(("Bot", "Extensions", filename[:-3])) for filename in filenames if
+                filename[0].isupper() and filename[-3:] == ".py"]
 
     def load_extensions(self) -> None:
         for file in self._get_extension_names():
@@ -201,7 +202,8 @@ class HeadhunterClient(Client):
         ]
 
         choices = clan_choices + player_choices + search_choices
-        choices = [choice for i, choice in enumerate(choices) if choice.value not in (choice_.value for choice_ in choices[:i])][:25]
+        choices = [choice for i, choice in enumerate(choices) if
+                   choice.value not in (choice_.value for choice_ in choices[:i])][:25]
 
         await ctx.send(choices)
         return
@@ -246,3 +248,22 @@ class HeadhunterClient(Client):
             ) for player in requests if ctx.kwargs['player'] in player.name or ctx.kwargs['player'] in player.tag][:25]
         )
         return
+
+    @global_autocomplete(option_name="member")
+    async def member_autocomplete(self, ctx: AutocompleteContext) -> None:
+        guild_clan_tag = self.db_user.guilds.fetch_clantag(ctx.guild_id)
+        try:
+            clan = await ClanMembersRequest(guild_clan_tag).request()
+        except type(ApiCodes.NOT_FOUND.value):
+            return
+        else:
+            await ctx.send([
+                SlashCommandChoice(name=f"{member.name}, "
+                                        f"tag: {member.tag}, "
+                                        f"clan rank: {member.clan_rank}, "
+                                        f"level: {member.exp_level}, "
+                                        f"trophies: {member.trophies}",
+                                   value=member.tag)
+                for member in clan if ctx.kwargs['member'] in member.name or ctx.kwargs['member'] in member.tag
+            ][:25])
+            return

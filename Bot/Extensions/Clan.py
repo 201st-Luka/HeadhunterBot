@@ -5,8 +5,8 @@ from interactions import Extension, SlashContext, SlashCommandOption, OptionType
     Color
 from interactions.ext.paginators import Paginator
 from pyclasher import ClanWarLogRequest, ClanRequest, MISSING, ClanCurrentWarRequest
-from pyclasher.models import ClanWarLogEntry
 from pyclasher.bulk_requests import PlayerBulkRequest
+from pyclasher.models import ClanWarLogEntry
 from pyclasher.models.Enums import ClanWarResult, ClanRole, ClanWarState
 
 from Bot.Exceptions import InvalidClanTag, NotInWar

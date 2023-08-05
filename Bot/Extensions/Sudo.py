@@ -1,13 +1,12 @@
 from typing import Annotated
 
-from interactions import slash_command, SlashCommandOption, OptionType, Extension, Client, SlashContext, Permissions, \
-    SlashCommandChoice, User, SlashCommand, AutoDefer, ChannelType, GuildChannel, Embed, Color, Modal, ParagraphText, \
+from interactions import slash_command, SlashCommandOption, OptionType, Extension, SlashContext, Permissions, \
+    SlashCommand, ChannelType, GuildChannel, Embed, Color, Modal, ParagraphText, \
     ModalContext
 from interactions.ext.paginators import Paginator
 from pyclasher import PlayerRequest, ClanRequest
-from pyclasher.models import ApiCodes
 
-from Bot.Exceptions import InvalidClanTag, InvalidPlayerTag, AlreadyLinkedPlayerTag
+from Bot.Exceptions import InvalidClanTag, InvalidPlayerTag
 from Bot.HeadhunterBot import HeadhunterClient
 from Bot.Interactions.Converters import ClanTagConverter, PlayerTagConverter
 from Bot.Interactions.SlashCommandOptions import ClanOption, PlayerOption
