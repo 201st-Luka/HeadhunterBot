@@ -2,12 +2,12 @@ from interactions import BaseContext, Converter
 from pyclasher import ClanRequest, PlayerRequest, ClanMembersRequest, ClanSearchRequest
 from pyclasher.models import ApiCodes
 
-from Bot.Exceptions import InvalidPlayerTag
+from Bot.Exceptions import InvalidPlayerTag, InvalidClanTag
 from Database.user import User
 
 
 class ClanConverter(Converter):
-    async def convert(self, ctx: BaseContext, clan_str: None | str) -> None | list[ClanRequest]:
+    async def convert(self, ctx: BaseContext, clan_str: str) -> None | list[ClanRequest]:
         db_user = User()
 
         clans: list[str] = []
@@ -27,7 +27,7 @@ class ClanConverter(Converter):
 
 
 class PlayerConverter(Converter):
-    async def convert(self, ctx: BaseContext, player_str: None | str) -> None | list[PlayerRequest]:
+    async def convert(self, ctx: BaseContext, player_str: str) -> None | list[PlayerRequest]:
         db_user = User()
 
         players: list[str] = []
@@ -41,7 +41,7 @@ class PlayerConverter(Converter):
         if clan := db_user.guilds.fetch_clantag(ctx.guild_id) is not None:
             try:
                 clan_members = await ClanMembersRequest(clan).request()
-            except ApiCodes.NOT_FOUND:
+            except type(ApiCodes.NOT_FOUND.value):
                 pass
             else:
                 players += [member.tag for member in clan_members if player_str in member.tag or player_str in member.name]
@@ -52,6 +52,19 @@ class PlayerConverter(Converter):
         return [PlayerRequest(player) for player in players if player.startswith("#")]
 
 
+class ClanTagConverter(Converter):
+    async def convert(self, ctx: BaseContext, clan_tag: None | str) -> ClanRequest:
+        if clan_tag is None:
+            raise InvalidClanTag
+
+        try:
+            clan = await ClanRequest(clan_tag).request()
+        except type(ApiCodes.NOT_FOUND.value):
+            raise InvalidClanTag
+        else:
+            return clan
+
+
 class PlayerTagConverter(Converter):
     async def convert(self, ctx: BaseContext, player_tag: None | str) -> PlayerRequest:
         if player_tag is None:
@@ -59,7 +72,7 @@ class PlayerTagConverter(Converter):
 
         try:
             player = await PlayerRequest(player_tag).request()
-        except ApiCodes.NOT_FOUND:
+        except type(ApiCodes.NOT_FOUND.value):
             raise InvalidPlayerTag
         else:
             return player
