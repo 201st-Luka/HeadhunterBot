@@ -13,13 +13,20 @@ class ActivityCommand(Extension):
 
     @clan.subcommand(
         sub_cmd_name="member",
-        sub_cmd_description="returns information about the members of the linked clan",
+        sub_cmd_description="returns information about one member of the linked clan",
         options=[
             MemberOption
         ]
     )
-    async def members(self, ctx: SlashContext, member: str) -> None:
+    async def member(self, ctx: SlashContext, member: str) -> None:
         await ctx.send(member)
+
+    @clan.subcommand(
+        sub_cmd_name="members",
+        sub_cmd_description="returns information about the linked clan's members"
+    )
+    async def members(self, ctx: SlashContext) -> None:
+        await ctx.send("...")
 
 
 def setup(client: HeadhunterClient) -> None:

@@ -1,4 +1,4 @@
-interactions.py==5.8.0
+discord-py-interactions==5.8.0
 git+https://github.com/201st-Luka/PyClasher.git@v1.0.0-alpha1
 
 coloredlogs>=15.0.0
