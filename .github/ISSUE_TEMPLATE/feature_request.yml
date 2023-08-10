@@ -1,0 +1,43 @@
+name: Feature request
+description: Request new features.
+title: "[FEAT] Enter your title here"
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for you time to fill in this feature request. This project is based on people contributing to the 
+        repository. If you need support, check out the [Discord server](https://discord.gg/j2PAF9Wru8).
+
+  - type: textarea
+    attributes:
+      label: Missing feature description
+      description: A clear and concise description of what the missing feature is. Ex. I'm always frustrated when [...]
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Proposed solution
+      description: A clear and concise description of what the feature would look like if implemented.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Available alternatives
+      description: A clear and concise description of any alternative solutions or features you have considered.
+
+  - type: textarea
+    attributes:
+      label: Additional Information
+      description: Any additional information that may help clarify your request.
+
+  - type: checkboxes
+    id: accept
+    attributes:
+      label: Code of Conduct
+      description: By submitting this Issue, you agree to follow our [contribution requirements.](https://github.com/201st-Luka/HeadhunterBot/blob/master/CONTRIBUTING.md)
+      options:
+        - label: I agree to follow the contribution requirements.
+          required: true

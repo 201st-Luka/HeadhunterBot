@@ -1,0 +1,1 @@
+docker run -dit -v ~/HeadhunterTestBot/HeadhunterBot.db:/HeadhunterBot/HeadhunterBot.db -v ~/HeadhunterTestBot/Logs:/HeadhunterBot/Logs/ --restart unless-stopped --name headhunter-bot headhunter_bot

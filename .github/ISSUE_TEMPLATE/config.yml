@@ -1,0 +1,8 @@
+template: bug_report.yml
+
+blank_issues_enabled: false
+
+contact_links:
+  - name: Discord server
+    url: https://discord.gg/j2PAF9Wru8
+    about: Join the 201st Community to receive support
