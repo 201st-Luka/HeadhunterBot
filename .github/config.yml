@@ -1,0 +1,6 @@
+# .github/config.yml
+
+community_files:
+  contributing: true
+  code_of_conduct: false
+  security: false
