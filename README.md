@@ -1,5 +1,9 @@
 [![Discord][discord_shield]][discord_url] ![Last commit][last_commit_shield]
 
+<p align="center">
+    <img src=".github/headhunter.png" height="400" width="400">
+</p>
+
 # HeadhunterBot
 
 HeadhunterBot is a Discord bot written in Python that retrieves information about a player, clan, war, and more. It 
