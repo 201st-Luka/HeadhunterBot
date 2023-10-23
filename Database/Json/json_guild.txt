@@ -1,1 +1,0 @@
-INSERT INTO guilds VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?); ('23123', None, 'None', None, None, 'None', 'None', 'None', None)

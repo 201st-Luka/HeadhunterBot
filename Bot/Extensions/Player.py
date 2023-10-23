@@ -2,8 +2,8 @@ from typing import Annotated
 
 from interactions import SlashCommand, SlashContext, Extension, Embed, Color
 from interactions.ext.paginators import Paginator
-from pyclasher import PlayerRequest
-from pyclasher.models.Enums import ClanRole, ApiCodes
+from pyclasher import PlayerRequest, NotFound
+from pyclasher.api.models.enums import ClanRole
 
 from Bot.Exceptions import AlreadyLinkedPlayerTag, NoPlayerTagLinked, InvalidPlayerTag
 from Bot.HeadhunterBot import HeadhunterClient
@@ -68,7 +68,7 @@ class PlayerCommand(Extension):
             for tag in player_tags[start:start + self.client.cfg['players_per_page']]:
                 try:
                     player = await PlayerRequest(tag).request()
-                except type(ApiCodes.NOT_FOUND.value):
+                except NotFound:
                     embed.add_field(
                         name=f"No information for {tag}",
                         value="N/A"

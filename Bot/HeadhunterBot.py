@@ -1,17 +1,19 @@
 import json
-from logging import Logger, INFO, Formatter, StreamHandler
+import os
+from logging import Logger, INFO, Formatter, StreamHandler, DEBUG
 from logging.handlers import TimedRotatingFileHandler
 from os import path, listdir, getcwd, environ, mkdir
 from sys import stdout
 
 from coloredlogs import install
 from interactions import Client, MISSING, global_autocomplete, AutocompleteContext, SlashCommandChoice
-from pyclasher import PyClasherClient, ClanRequest, ClanSearchRequest, PlayerRequest, ClanMembersRequest
-from pyclasher.bulk_requests import PlayerBulkRequest
-from pyclasher.models import ApiCodes, Clan
+from pyclasher import (Client as PyClasherClient, ClanRequest, ClanSearchRequest, PlayerRequest, ClanMembersRequest,
+                       NotFound)
+from pyclasher.api.bulk_requests import PlayerBulkRequest
+from pyclasher.api.models import Clan
 
-from Bot.Exceptions import InitialisationError
-from Database import DataBase, User
+from Bot.Exceptions import InitialisationError, HeadhunterException
+from Bot.Database import DataBase, User
 
 
 class HeadhunterLogger(Logger):
@@ -76,35 +78,58 @@ class HeadhunterClient(Client):
 
         self.cwd = getcwd()
 
-        try:
-            listdir(environ.get(env_keys[2]))
-        except FileNotFoundError:
+        if not path.exists(environ.get(env_keys[2])):
             mkdir(environ.get(env_keys[2]))
             with open(path.join(environ.get(env_keys[2]), "HeadhunterBot.log"), "w") as f:
                 pass
 
-        super().__init__(
-            token=environ.get(env_keys[0]),
-            logger=HeadhunterLogger(environ.get(env_keys[2])),
-            delete_unused_application_cmds=True,
-            sync_interactions=True,
-            send_command_tracebacks=False,
-            debug_scope=int(environ.get("DEBUG_SCOPE")) if "DEBUG_SCOPE" in environ else MISSING
-        )
+        if 'DEBUG' in environ:
+            debug = environ.get('DEBUG').split(';')
+            if len(debug) >= 3:
+                super().__init__(
+                    token=environ.get(env_keys[0]),
+                    logger=HeadhunterLogger(environ.get(env_keys[2]), log_level=DEBUG),
+                    delete_unused_application_cmds=True,
+                    sync_interactions=True,
+                    send_command_tracebacks=False,
+                    debug_scope=int(debug[0])
+                )
+                self.logger.info("Initialised the HeadhunterBot in DEBUG mode.")
 
-        self.logger.info("Initialising the HeadhunterBot")
+                self.pyclasher_client = None
+                self.logger.info("Not initialising the PyClasher client. Doing it when the bot starts.")
+            else:
+                raise HeadhunterException("DEBUG mode requires 3 variables separated by ';': the debug scope, "
+                                          "the ClashOfClans API login mail address and its password.")
+        else:
+            super().__init__(
+                token=environ.get(env_keys[0]),
+                logger=HeadhunterLogger(environ.get(env_keys[2])),
+                delete_unused_application_cmds=True,
+                sync_interactions=True,
+                send_command_tracebacks=False
+            )
 
-        self.pyclasher_client = PyClasherClient(
-            environ.get(env_keys[1]).split(":"),
-            requests_per_second=5
-        )
+            self.logger.info("Initialising the HeadhunterBot")
+
+            self.pyclasher_client = PyClasherClient(
+                tokens=environ.get(env_keys[1]).split(":"),
+                requests_per_second=5
+            )
+            self.logger.info("Initialised the PyClasher client.")
+
         self.db = DataBase(environ.get(env_keys[3]), self.logger)
         self.db_user = User()
 
         return
 
     async def astart(self, token: str | None = None) -> None:
-        self.pyclasher_client.start()
+        if 'DEBUG' in environ:
+            debug = environ.get('DEBUG').split(';')
+            self.pyclasher_client = await PyClasherClient.from_login(debug[1], ';'.join(debug[2:]),
+                                                                     requests_per_second=5,
+                                                                     logger=self.logger.getChild("PyClasher"))
+        await self.pyclasher_client.start()
         await super().astart(token)
         return
 
@@ -150,7 +175,7 @@ class HeadhunterClient(Client):
             if ctx_clan.startswith("#"):
                 try:
                     clan = await ClanRequest(ctx_clan).request()
-                except ApiCodes.NOT_FOUND:
+                except NotFound:
                     pass
                 else:
                     clans.append(clan)
@@ -168,7 +193,7 @@ class HeadhunterClient(Client):
         for _, player_tag in db_players:
             try:
                 player_req = await PlayerRequest(player_tag).request()
-            except ApiCodes.NOT_FOUND.value:
+            except NotFound:
                 continue
             else:
                 if ctx_clan in player_req.clan.name or ctx_clan in player_req.clan.tag:
@@ -216,7 +241,7 @@ class HeadhunterClient(Client):
             for tag in user_players:
                 try:
                     req = await PlayerRequest(tag).request()
-                except type(ApiCodes.NOT_FOUND.value):
+                except type(NotFound):
                     pass
                 else:
                     requests.append(req)
@@ -224,7 +249,7 @@ class HeadhunterClient(Client):
             try:
                 clan_members = await ClanMembersRequest(clan_tag).request()
                 player_bulk = await PlayerBulkRequest.from_member_list(clan_members).request()
-            except type(ApiCodes.NOT_FOUND.value):
+            except type(NotFound):
                 pass
             else:
                 requests += list(player_bulk)
@@ -232,7 +257,7 @@ class HeadhunterClient(Client):
         if ctx.kwargs['player'].startswith('#'):
             try:
                 req = await PlayerRequest(ctx.kwargs['player']).request()
-            except type(ApiCodes.NOT_FOUND.value):
+            except type(NotFound):
                 pass
             else:
                 requests.append(req)
@@ -254,16 +279,17 @@ class HeadhunterClient(Client):
         guild_clan_tag = self.db_user.guilds.fetch_clantag(ctx.guild_id)
         try:
             clan = await ClanMembersRequest(guild_clan_tag).request()
-        except type(ApiCodes.NOT_FOUND.value):
+        except type(NotFound):
             return
         else:
             await ctx.send([
-                SlashCommandChoice(name=f"{member.name}, "
-                                        f"tag: {member.tag}, "
-                                        f"clan rank: {member.clan_rank}, "
-                                        f"level: {member.exp_level}, "
-                                        f"trophies: {member.trophies}",
-                                   value=member.tag)
-                for member in clan if ctx.kwargs['member'] in member.name or ctx.kwargs['member'] in member.tag
-            ][:25])
+                               SlashCommandChoice(name=f"{member.name}, "
+                                                       f"tag: {member.tag}, "
+                                                       f"clan rank: {member.clan_rank}, "
+                                                       f"level: {member.exp_level}, "
+                                                       f"trophies: {member.trophies}",
+                                                  value=member.tag)
+                               for member in clan if
+                               ctx.kwargs['member'] in member.name or ctx.kwargs['member'] in member.tag
+                           ][:25])
             return

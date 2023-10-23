@@ -1,21 +1,10 @@
-from importlib.util import spec_from_file_location, module_from_spec
 from logging import Logger
-from os import path, getcwd, listdir
 from sqlite3 import connect
-from typing import Callable, Any
 
-from pyclasher import MISSING
+# from .Tables import (TableGuilds, TableGuildBlacklist, TablePlayers, TableUsers, TableClans)
 
 
-class DataBaseLogger:
-    logger: Logger = MISSING
-
-    def __call__(self, function: Callable[..., Any]) -> Callable[..., Any]:
-        def wrapper(*args, **kwargs) -> Any:
-            DataBaseLogger.logger.info(f"Database: {function.__name__} in {str(args[0].table).lower()}.")
-            return function(*args, **kwargs)
-
-        return wrapper
+# Tables = [TableGuilds, TableGuildBlacklist, TablePlayers, TableUsers, TableClans]
 
 
 class DataBase:
@@ -38,7 +27,6 @@ class DataBase:
         if db_path is not None and logger is not None:
             self.logger = logger.getChild("Db")
             self.logger.info("Initialising the Database")
-            DataBaseLogger.logger = self.logger
             self.path = db_path
             self.__db = connect(self.path)
             self.__c = self.__db.cursor()
@@ -49,23 +37,17 @@ class DataBase:
             return
 
     def __check_tables(self) -> None:
-        cwd = getcwd()
-        tables_path = path.join(cwd, "Database", "Tables")
-        py_files = [module for module in listdir(tables_path) if module[-3:] == ".py"]
+        from .Tables import (TableGuilds, TableGuildBlacklist, TablePlayers, TableUsers, TableClans)
 
-        query = "SELECT name FROM sqlite_master WHERE type='table' AND name=?"
-        for file in py_files:
-            file_path = path.join("Database", "Tables", file)
+        Tables = [TableGuilds, TableGuildBlacklist, TablePlayers, TableUsers, TableClans]
 
-            spec = spec_from_file_location(file, file_path)
-            module = module_from_spec(spec)
-            spec.loader.exec_module(module)
-
-            self.__c.execute(query, (module.Table,))
+        for Table in Tables:
+            self.__c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=?",
+                             (Table.name,))
             result = self.__c.fetchall()
 
             if not result:
-                module.create_table(self)
+                Table.create_table(self)
 
         return
 

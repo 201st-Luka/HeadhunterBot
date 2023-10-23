@@ -1,7 +1,7 @@
-from Database.Tables.table_clans import TableClans
-from Database.Tables.table_guild import TableGuilds
-from Database.Tables.table_guild_blacklist import TableGuildBlacklist
-from Database.Tables.table_users import TableUsers
+from Bot.Database.Tables.table_clans import TableClans
+from Bot.Database.Tables.table_guild import TableGuilds
+from Bot.Database.Tables.table_guild_blacklist import TableGuildBlacklist
+from Bot.Database.Tables.table_users import TableUsers
 
 
 class User:

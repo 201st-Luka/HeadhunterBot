@@ -1,9 +1,9 @@
 from interactions import BaseContext, Converter
 from pyclasher import ClanRequest, PlayerRequest, ClanMembersRequest, ClanSearchRequest
-from pyclasher.models import ApiCodes
+from pyclasher import NotFound
 
 from Bot.Exceptions import InvalidPlayerTag, InvalidClanTag
-from Database.user import User
+from Bot.Database import User
 
 
 class ClanConverter(Converter):
@@ -41,7 +41,7 @@ class PlayerConverter(Converter):
         if clan := db_user.guilds.fetch_clantag(ctx.guild_id) is not None:
             try:
                 clan_members = await ClanMembersRequest(clan).request()
-            except type(ApiCodes.NOT_FOUND.value):
+            except type(NotFound):
                 pass
             else:
                 players += [member.tag for member in clan_members if player_str in member.tag or player_str in member.name]
@@ -59,7 +59,7 @@ class ClanTagConverter(Converter):
 
         try:
             clan = await ClanRequest(clan_tag).request()
-        except type(ApiCodes.NOT_FOUND.value):
+        except type(NotFound):
             raise InvalidClanTag
         else:
             return clan
@@ -72,7 +72,7 @@ class PlayerTagConverter(Converter):
 
         try:
             player = await PlayerRequest(player_tag).request()
-        except type(ApiCodes.NOT_FOUND.value):
+        except type(NotFound):
             raise InvalidPlayerTag
         else:
             return player

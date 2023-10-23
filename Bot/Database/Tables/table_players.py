@@ -1,11 +1,9 @@
-from Database import DataBase, DataBaseLogger
+from .abc import AbcTable
 
 
-Table = "players"
-
-
-def create_table(db: DataBase):
-    db.cursor.execute(
+class TablePlayers(AbcTable):
+    name = "players"
+    create_table_query = (
         "CREATE TABLE players ("
         "tag TEXT,"
         "townHallLevel INTEGER,"
@@ -27,25 +25,7 @@ def create_table(db: DataBase):
         "legendTrophies INTEGER"
         ");"
     )
-    db.save_changes()
 
-    DataBaseLogger.logger.info(f"Created table {Table}.")
-
-    return
-
-
-class TablePlayers:
-    table = Table
-    db = None
-    cursor = None
-    connection = None
-
-    def __init__(self, database: DataBase):
-        self.cursor = database.cursor
-        self.connection = database.connection
-        self.db = database
-
-    @DataBaseLogger()
     def insert_player_as_json(self, player_json: dict, timestamp: int):
         properties = ["tag", "townHallLevel", "expLevel", "trophies", "bestTrophies", "warStars", "attackWins",
                       "defenseWins", "builderHallLevel", "versusTrophies", "bestVersusTrophies", "versusBattleWins", "role",
@@ -58,9 +38,9 @@ class TablePlayers:
                         [5, 6, 10, 12, 13, 14, 16, 21, 23, 27, 31, 33, 35, 39, 40, 41, 42, 28, timestamp]]
         placeholders = ", ".join("?" for _ in properties)
 
-        query = f"INSERT INTO {self.table} ({', '.join(properties)}, timestamp) VALUES ({placeholders}, ?);"
+        query = f"INSERT INTO {self.name} ({', '.join(properties)}, timestamp) VALUES ({placeholders}, ?);"
         values.append(timestamp)
 
         self.cursor.execute(query, tuple(values + achievements))
 
-        self.cursor.save_changes()
+        self._db.save_changes()
